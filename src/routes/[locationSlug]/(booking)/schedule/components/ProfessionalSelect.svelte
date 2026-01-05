@@ -11,7 +11,7 @@
   $: _workers = [{ name: "Tous", id: -1 }, ...workers];
 </script>
 
-<div class="flex gap-2 overflow-x-auto md:mt-2 py-2">
+<div class="flex gap-2 md:mt-2 py-2 overflow-x-auto">
   {#each _workers as worker}
     <button
       on:click={() => {

@@ -100,7 +100,7 @@
   <BookingHeader text={m.chooseArrivalTime()} />
 
   <div class="flex flex-col items-start md:items-start gap-4 w-full lg:w-[90%] xl:[60%] md:mt-0">
-    <div>
+    <div class="w-full overflow-x-auto">
       <ProfessionalSelect {workers} bind:selectedWorkerId={filterWorkerId} />
     </div>
 
