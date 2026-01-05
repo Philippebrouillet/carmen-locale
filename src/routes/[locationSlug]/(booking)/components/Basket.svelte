@@ -1,0 +1,405 @@
+<script lang="ts">
+  import { PUBLIC_STRIPE_KEY } from "$env/static/public";
+  import { Button } from "$lib/components/ui/button";
+  import { displayPriceInDollars } from "$lib/formater";
+  import { loadStripe, type Stripe } from "@stripe/stripe-js";
+  import { onMount } from "svelte";
+  // import type { CountryCode } from "svelte-tel-input/types";
+
+  import BookingServiceBox from "./BookingServiceBox.svelte";
+  import PaymentPopup from "./PaymentPopup.svelte";
+  import { languageTag } from "$lib/paraglide/runtime";
+  import * as m from "$lib/paraglide/messages.js";
+
+  import { shopStore } from "$lib/stores/basketStore";
+  import { location } from "$src/lib/stores/location.store";
+  import BookingHeader from "./BookingHeader.svelte";
+  import type { LocationTheme } from "$src/types/Location";
+  import {
+    Clock3,
+    Dock,
+    InfoIcon,
+    ShieldCheck,
+    StoreIcon,
+    Tag,
+    TrendingUp,
+    Wallet,
+  } from "lucide-svelte";
+  import PopupInfosBasket from "./PopupInfosBasket.svelte";
+
+  type PopupType = "ACOMPTE" | "FEES90" | "FEES30" | "HOURS" | "REDUCTION" | "MAJORATION";
+  type PaymentConfig = "FULL" | "FULLWITHCHOICES" | "ACCOMPTE" | "PAYONLINE";
+
+  const paymentConfig: PaymentConfig = "FULL";
+  const minimumServiceFeeInCents = 90; // 0.90
+  const defaultAcomptePrice = 500; // 5.00
+
+  const iconColorByTheme: Record<LocationTheme, string> = {
+    NEUTRAL: "text-primary",
+    PINK: "text-pink",
+    CARDEN: "text-blue",
+  };
+
+  const backgroundByTheme: Record<LocationTheme, string> = {
+    NEUTRAL: "bg-[#F8FAFD]",
+    PINK: "bg-[#FFF5FA]",
+    CARDEN: "bg-[#F8FAFD]",
+  };
+
+  const backgroundColorFeeByTheme: Record<LocationTheme, string> = {
+    NEUTRAL: "bg-[#DFE5E7]",
+    PINK: "bg-[#E5CEF7]",
+    CARDEN: "bg-[#C7E0FF]",
+  };
+
+  let isPaymentPopupOpen = false;
+  let stripe: Stripe | null = null;
+  let popupInfosOpen: PopupType | null = null;
+  let paymentMethod: "credit-card" | "in-store" = ["PAYONLINE", "ACCOMPTE"].includes(paymentConfig)
+    ? "credit-card"
+    : "in-store";
+
+  const openPopupInfo = (type: PopupType) => {
+    popupInfosOpen = type;
+  };
+
+  onMount(async () => {
+    const stripeKey = PUBLIC_STRIPE_KEY;
+    if (stripeKey) {
+      stripe = await loadStripe(stripeKey);
+    }
+  });
+
+  $: bookingTime = $shopStore.bookingDate;
+  $: selectedProfessional = $shopStore.selectedProfessional;
+  $: selectedService = $shopStore.selectedService;
+  $: theme = $location.location.theme;
+  $: iconColor = iconColorByTheme[theme];
+  $: isOnlinePayment =
+    (paymentConfig === "FULLWITHCHOICES" && paymentMethod === "credit-card") ||
+    paymentConfig === "PAYONLINE" ||
+    paymentConfig === "ACCOMPTE";
+  $: priceWithDiscountPrice = selectedService?.discountedPrice
+    ? selectedService.discountedPrice
+    : selectedService?.price || 0;
+  $: cardenFee = (priceWithDiscountPrice * 3) / 100;
+  $: isDefaultFees = cardenFee < minimumServiceFeeInCents;
+  $: finalCardenFees = isDefaultFees ? minimumServiceFeeInCents : cardenFee;
+  $: isSuperiorDiscounted = selectedService?.discountedPrice || 0 > selectedService?.price;
+  $: feesWithAccompte = finalCardenFees + defaultAcomptePrice;
+  $: totalToPayInPlace = displayPriceInDollars(
+    priceWithDiscountPrice + finalCardenFees - feesWithAccompte,
+  );
+  $: haveModifiedPrice = selectedService?.discountedPrice;
+  $: haveToPayFees = paymentConfig === "ACCOMPTE" || paymentConfig === "PAYONLINE" ? true : false;
+
+  const calculateFinalPrice = () => {
+    if (isOnlinePayment) {
+      if (paymentConfig === "ACCOMPTE") return feesWithAccompte;
+      else {
+        if (paymentConfig === "PAYONLINE") return priceWithDiscountPrice + finalCardenFees;
+        else return priceWithDiscountPrice;
+      }
+    } else {
+      return priceWithDiscountPrice;
+    }
+  };
+</script>
+
+{#if selectedService && selectedProfessional}
+  <div class="flex">
+    <div
+      class="relative {backgroundByTheme[
+        theme
+      ]} flex flex-col border lg:w-1/2 w-full overflow-y-auto h-screen"
+    >
+      <div class="px-6 md:px-8">
+        <BookingHeader text={m.bookingBasketTitle()} />
+
+        <div class="pb-2 md:pb-6 md:mt-6">
+          <h1 class="font-bold text-lg">{m.yourSelection()}</h1>
+        </div>
+        <div class="flex flex-col justify-between w-full h-full">
+          <div
+            class="flex flex-col gap-4 bg-white rounded-lg p-4 md:p-6 border border-[#DFE5E7] mb-4"
+          >
+            <BookingServiceBox {selectedProfessional} {selectedService} {openPopupInfo} />
+
+            <div class="flex text-sm flex-row justify-between text-primary font-bold items-center">
+              <p class=" text-sm flex gap-1">
+                <Clock3 class={iconColor} size={18} />
+                {m.today()}
+              </p>
+
+              <p class="text-lg">
+                {bookingTime?.toLocaleTimeString(languageTag(), {
+                  hour: "numeric",
+                  minute: "numeric",
+                })}
+              </p>
+            </div>
+          </div>
+
+          <div class="pb-2 md:pb-6 md:mt-6">
+            <h1 class="font-bold text-lg">{m.priceDetail()}</h1>
+          </div>
+          <div class="flex flex-col gap-4 bg-white rounded-lg py-6 md:py-8 border border-[#DFE5E7]">
+            <div
+              class="flex justify-between items-center text-primary font-normal text-sm px-6 md:px-8"
+            >
+              <p>{m.servicePrice()}</p>
+              <p>
+                {haveModifiedPrice
+                  ? displayPriceInDollars(selectedService.price)
+                  : displayPriceInDollars(priceWithDiscountPrice)}
+              </p>
+            </div>
+
+            <!-- // DISCOUNTED / SUPERIOR PRICE DETAIL  // -->
+            {#if haveModifiedPrice}
+              <div
+                class="flex justify-between items-center text-primary font-normal text-sm mx-4 md:mx-6 py-2 rounded-[3px] px-2 {isSuperiorDiscounted
+                  ? 'bg-[#7832DC] bg-opacity-15'
+                  : 'bg-[#23BBAC] bg-opacity-20'}"
+              >
+                <p class="flex gap-1.5 items-center">
+                  {isSuperiorDiscounted ? m.surcharge() : m.discount()}
+                  <button
+                    on:click={() => {
+                      const type = isSuperiorDiscounted ? "MAJORATION" : "REDUCTION";
+                      openPopupInfo(type);
+                    }}
+                  >
+                    <InfoIcon size={12} />
+                  </button>
+                </p>
+                <p
+                  class="flex gap-1.5 items-center {isSuperiorDiscounted
+                    ? 'text-[#7832DC]'
+                    : 'text-[#23BBAC]'}"
+                >
+                  <span class=" {isSuperiorDiscounted ? '' : 'rotate-90'}">
+                    {#if isSuperiorDiscounted}
+                      <TrendingUp size={16} />
+                    {:else}
+                      <Tag size={16} />
+                    {/if}</span
+                  >
+
+                  <span class="text-sm font-bold"
+                    >{isSuperiorDiscounted ? "+" : "-"}{displayPriceInDollars(
+                      isSuperiorDiscounted
+                        ? selectedService.discountedPrice - selectedService.price
+                        : selectedService.price - selectedService.discountedPrice,
+                    )}</span
+                  >
+                </p>
+              </div>
+            {/if}
+
+            <!-- // CARDEN FEE DETAIL  // -->
+            {#if haveToPayFees}
+              <div
+                class="flex justify-between items-center font-normal text-sm text-[#616163] px-6 md:px-8"
+              >
+                <p
+                  class="flex gap-1.5 items-center underline underline-offset-4 decoration-dashed decoration-[#DFE5E7]"
+                >
+                  Frais de service <button
+                    on:click={() => {
+                      openPopupInfo(isDefaultFees ? "FEES90" : "FEES30");
+                    }}><InfoIcon size={12} /></button
+                  >
+                </p>
+                <p>{displayPriceInDollars(finalCardenFees)}</p>
+              </div>
+            {/if}
+
+            <!-- // TOTAL DETAIL  // -->
+            {#if haveToPayFees || haveModifiedPrice}
+              <div
+                class="flex justify-between items-center text-primary text-sm font-bold px-6 md:px-8"
+              >
+                <span class="font-bold">{m.total()}</span>
+
+                <span>
+                  {displayPriceInDollars(
+                    haveToPayFees
+                      ? priceWithDiscountPrice + finalCardenFees
+                      : priceWithDiscountPrice,
+                  )}</span
+                >
+              </div>
+            {/if}
+
+            <!-- // ACCOMPTE DETAIL  // -->
+            {#if paymentConfig === "ACCOMPTE"}
+              <div class="py-2 {backgroundColorFeeByTheme[theme]} bg-opacity-30 px-6 md:px-8">
+                <div class="flex justify-between items-center text-primary font-bold text-sm">
+                  <p class="text-primary flex items-center gap-1.5">
+                    <Wallet class={iconColor} size={18} />
+                    <span class="font-bold">{m.acompte()} + {m.frais()}</span>
+                    <button
+                      on:click={() => {
+                        openPopupInfo("ACOMPTE");
+                      }}><InfoIcon class={iconColor} size={12} /></button
+                    >
+                  </p>
+                  <p class="text-lg">
+                    {displayPriceInDollars(finalCardenFees + defaultAcomptePrice)}
+                  </p>
+                </div>
+
+                <span class="text-xs text-[#616163]"
+                  >{displayPriceInDollars(defaultAcomptePrice)} + {displayPriceInDollars(
+                    finalCardenFees,
+                  )}</span
+                >
+              </div>
+            {/if}
+
+            <!-- FINAL PAYMENT DETAIL  -->
+            {#if paymentConfig !== "FULLWITHCHOICES"}
+              <div
+                class="flex justify-between items-center text-primary text-sm font-bold px-6 md:px-8"
+              >
+                <p class="flex items-center gap-1.5">
+                  {#if paymentConfig === "ACCOMPTE" || paymentConfig === "FULL"}
+                    <StoreIcon size={18} />
+                  {:else if paymentConfig === "PAYONLINE"}
+                    <Dock size={18} />
+                  {/if}
+
+                  <span
+                    >{paymentConfig === "ACCOMPTE"
+                      ? m.remaindToPayInPlace()
+                      : paymentConfig === "PAYONLINE"
+                        ? m.toBePaidOnline()
+                        : paymentConfig === "FULL"
+                          ? m.toBePaidOnSite()
+                          : ""}</span
+                  >
+                </p>
+
+                <span
+                  >{paymentConfig === "ACCOMPTE"
+                    ? totalToPayInPlace
+                    : paymentConfig === "PAYONLINE"
+                      ? displayPriceInDollars(priceWithDiscountPrice + finalCardenFees)
+                      : paymentConfig === "FULL"
+                        ? displayPriceInDollars(priceWithDiscountPrice)
+                        : ""}</span
+                >
+              </div>
+            {/if}
+          </div>
+
+          <!-- // PAYMENT METHOD CHOICE  // -->
+          {#if paymentConfig === "FULLWITHCHOICES"}
+            <div class="pb-2 mt-4 md:pb-6 md:mt-6">
+              <h1 class="font-bold text-lg">{m.paymentMethod()}</h1>
+            </div>
+            <div
+              class="flex flex-col gap-4 bg-white rounded-lg p-4 py-5 md:p-8 border border-[#DFE5E7]"
+            >
+              <div class="flex gap-2 text-sm font-bold mb-2">
+                <button
+                  type="button"
+                  class="rounded-lg w-full max-h-[2.7rem] h-[2.7rem] border px-2 flex items-center justify-center transition-all duration-300 ease-in-out {paymentMethod ==
+                  'in-store'
+                    ? 'bg-black text-primary-foreground'
+                    : ''}"
+                  on:click={() => {
+                    paymentMethod = "in-store";
+                  }}
+                >
+                  {m.paymentOnSite()}
+                </button>
+                <button
+                  type="button"
+                  class="rounded-lg w-full max-h-[2.7rem] h-[2.7rem] border px-3 flex items-center justify-center transition-all duration-300 ease-in-out {paymentMethod ==
+                  'credit-card'
+                    ? 'bg-black text-primary-foreground'
+                    : ''}"
+                  on:click={() => {
+                    paymentMethod = "credit-card";
+                  }}
+                >
+                  {m.onlinePayment()}
+                </button>
+              </div>
+
+              <div
+                class="flex justify-between items-center text-primary font-bold text-sm px-6 md:px-8"
+              >
+                <p class="flex gap-1.5">
+                  {#if paymentMethod === "in-store"}<StoreIcon size={18} />{:else}
+                    <Dock size={18} />
+                  {/if}
+
+                  {paymentMethod === "in-store" ? m.remaindToPayInPlace() : m.toBePaidOnline()}
+                </p>
+                <p>{displayPriceInDollars(priceWithDiscountPrice)}</p>
+              </div>
+            </div>
+          {/if}
+          <div class="flex-1 pt-10" />
+        </div>
+      </div>
+
+      <div
+        class="bg-white py-4 px-6 fixed bottom-0 left-0 right-0 flex items-center justify-center flex-col gap-1 lg:w-1/2"
+      >
+        {#if isOnlinePayment}
+          <div class="flex gap-1.5 text-xs text-[#616163] mb-2 justify-center items-center">
+            <ShieldCheck size={12} />
+            {m.securePayment()}
+          </div>
+        {/if}
+
+        <Button
+          type="button"
+          on:click={() => {
+            isPaymentPopupOpen = true;
+          }}
+          class="rounded-lg min-h-[61px] w-full  bg-primary  "
+        >
+          {#if isOnlinePayment}
+            <div class="ml-2">
+              {#if paymentConfig === "ACCOMPTE"}
+                <div class="flex flex-col">
+                  {m.bookSlot()}
+                  {displayPriceInDollars(feesWithAccompte)}
+                  <span class="text-[#DFE5E7] text-xs"
+                    >{m.remaindToPayInPlace()} {totalToPayInPlace}</span
+                  >
+                </div>
+              {:else}
+                {m.pay()}
+                {#if paymentConfig === "PAYONLINE"}
+                  {displayPriceInDollars(priceWithDiscountPrice + finalCardenFees)}
+                {:else}
+                  {displayPriceInDollars(priceWithDiscountPrice)}
+                {/if}
+              {/if}
+            </div>
+          {:else}
+            {m.confirmBooking()}
+          {/if}
+        </Button>
+      </div>
+
+      <PaymentPopup
+        bind:open={isPaymentPopupOpen}
+        {paymentMethod}
+        finalPriceToPay={calculateFinalPrice()}
+      />
+    </div>
+    <div class="hidden lg:block h-screen w-1/2 lg:relative">
+      <img src={$location.location.banner} alt="banner" class="h-full w-full object-cover" />
+      <div class="absolute inset-0 bg-black opacity-20" />
+    </div>
+  </div>
+{/if}
+
+<PopupInfosBasket bind:popupInfosOpen />
