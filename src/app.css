@@ -65,10 +65,10 @@
   }
 
   .dark {
-    --background: 330 100% 98%;
+    --background: 216 56% 98%;
     --foreground: 222.2 84% 4.9%;
 
-    --muted: 274 72% 89%;
+    --muted: 213 100% 89%;
     --muted-foreground: 251 68% 6%;
 
     --popover: 0 0% 100%;
@@ -83,14 +83,23 @@
     --primary: 251 68% 6%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 232 60% 20%;
+    --secondary: 240 1% 38%;
     --secondary-foreground: 0 0% 100%;
 
-    --accent: 274 93% 78%;
+    --accent: 213 100% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72.2% 50.6%;
     --destructive-foreground: 210 40% 98%;
+
+    --dynamic-green: 174 68% 44%;
+    --dynamic-green-foreground: 174 68% 44%;
+
+    --pink: 274 93% 78%;
+    --pale-pink: 274 71% 89%;
+
+    --blue: 213 100% 50%;
+    --pale-blue: 213 100% 89%;
 
     --ring: 222.2 84% 4.9%;
 
