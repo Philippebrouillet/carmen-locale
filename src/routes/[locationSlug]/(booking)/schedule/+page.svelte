@@ -202,34 +202,35 @@
     <div class="flex items-center justify-center w-full">
       <BadgeTarifMode />
     </div>
+    <div class="flex flex-col gap-4 w-full overflow-hidden">
+      <!-- SELECTED WORKER  -->
+      {#each workers.filter((w) => w.id == filterWorkerId) as w, i}
+        <Worker
+          bind:selectedWorkerId
+          bind:selectedSlotTime
+          worker={w}
+          showInfo={appointmentOptionSelected}
+          isFree={w.nextAvailable?.isFirstSlot &&
+            !(appointmentOptionSelected && w.nextAvailable?.createHole)}
+          index={i}
+        />
+      {/each}
 
-    <!-- SELECTED WORKER  -->
-    {#each workers.filter((w) => w.id == filterWorkerId) as w, i}
-      <Worker
-        bind:selectedWorkerId
-        bind:selectedSlotTime
-        worker={w}
-        showInfo={appointmentOptionSelected}
-        isFree={w.nextAvailable?.isFirstSlot &&
-          !(appointmentOptionSelected && w.nextAvailable?.createHole)}
-        index={i}
-      />
-    {/each}
-
-    <!-- OTHER WORKERS  -->
-    <!-- {#key selectedTime}
-      {#key bookingDelay} -->
-    {#each workers.filter((w) => w.id != filterWorkerId) as w, i}
-      <Worker
-        bind:selectedWorkerId
-        bind:selectedSlotTime
-        worker={w}
-        showInfo={appointmentOptionSelected}
-        index={i}
-        isFree={false}
-      />
-    {/each}
-    <!-- {/key}
-    {/key} -->
+      <!-- OTHER WORKERS  -->
+      {#key selectedTime}
+        {#key bookingDelay}
+          {#each workers.filter((w) => w.id != filterWorkerId) as w, i}
+            <Worker
+              bind:selectedWorkerId
+              bind:selectedSlotTime
+              worker={w}
+              showInfo={appointmentOptionSelected}
+              index={i}
+              isFree={false}
+            />
+          {/each}
+        {/key}
+      {/key}
+    </div>
   </div>
 </main>
