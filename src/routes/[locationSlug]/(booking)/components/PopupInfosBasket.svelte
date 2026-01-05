@@ -133,7 +133,7 @@
           <div
             class="flex justify-between items-center text-primary font-normal text-sm w-full py-3 rounded-[3px] px-2 bg-[#23BBAC] bg-opacity-20 mb-6"
           >
-            <p class="">{m.popupInfosEconomy}</p>
+            <p>{m.popupInfosEconomy()}</p>
             <span class="text-sm font-bold text-[#23BBAC]"
               >-{displayPriceInDollars(
                 selectedService.price - selectedService.discountedPrice,
