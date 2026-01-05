@@ -3,20 +3,22 @@
   import { page } from "$app/stores";
   import BackIcon from "$lib/assets/icons/BackIcon.svelte";
   import Breadcrumb from "$lib/components/Breadcrumb.svelte";
-
-  import type { Page } from "@sveltejs/kit";
-  import { derived } from "svelte/store";
+  import { clock } from "$src/lib/stores/clock.svelte";
+  import { location } from "$src/lib/stores/location.store";
+  import { computeQueue } from "$src/services/QueueLine";
 
   export let text: string;
 
-  // const parentRoute = derived(page, ($page: Page) => {
-  //   const segments = $page.url.pathname.split("/").filter(Boolean);
-  //   segments.pop();
-  //   return "/" + segments.join("/");
-  // });
+  $: start = new Date(new Date($clock).getTime() + 5 * 60 * 1000);
+  $: workers = computeQueue($location, new Date($clock), start);
 
   const navigateBack = (): void => {
-    history.back();
+    if (
+      $page.url.href.includes("services") &&
+      workers.filter((w) => w.formatedStatus === "available").length === 1
+    )
+      goto(`/${$page.params.locationSlug}`);
+    else history.back();
   };
 </script>
 
