@@ -18,20 +18,23 @@
   const dataByTarifMode: Record<string, { icon: any; text: string }> = {
     RARE: { icon: AlarmClock, text: m.lastPlace() },
     LOW_DEMAND: { icon: ThumbsUp, text: m.smartRate() },
-    HIGH_DEMAND: { icon: BarChart, text: m.highDemand() },
+    HGH_DEMAND: { icon: BarChart, text: m.highDemand() },
   };
 
   $: location = $locationStore.location;
   $: theme = location.theme;
+  $: data = dataByTarifMode[location.tarifMode];
 </script>
 
-<div
-  class="rounded-full {backgroundBadgeColorByTheme[
-    theme
-  ]} bg-opacity-20 h-6 px-2 flex items-center gap-1.5 mb-1 max-w-fit uppercase font-extrabold text-xs {textColorByTheme[
-    theme
-  ]}"
->
-  <svelte:component this={dataByTarifMode[location.tarifMode]?.icon} size={16} />
-  {dataByTarifMode[location.tarifMode]?.text}
-</div>
+{#if data}
+  <div
+    class="rounded-full {backgroundBadgeColorByTheme[
+      theme
+    ]} bg-opacity-20 h-6 px-2 flex items-center gap-1.5 mb-1 max-w-fit uppercase font-extrabold text-xs {textColorByTheme[
+      theme
+    ]}"
+  >
+    <svelte:component this={data.icon} size={16} />
+    {data.text}
+  </div>
+{/if}
