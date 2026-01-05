@@ -217,19 +217,19 @@
     {/each}
 
     <!-- OTHER WORKERS  -->
-    {#key selectedTime}
-      {#key bookingDelay}
-        {#each workers.filter((w) => w.id != filterWorkerId) as w, i}
-          <Worker
-            bind:selectedWorkerId
-            bind:selectedSlotTime
-            worker={w}
-            showInfo={appointmentOptionSelected}
-            index={i}
-            isFree={false}
-          />
-        {/each}
-      {/key}
-    {/key}
+    <!-- {#key selectedTime}
+      {#key bookingDelay} -->
+    {#each workers.filter((w) => w.id != filterWorkerId) as w, i}
+      <Worker
+        bind:selectedWorkerId
+        bind:selectedSlotTime
+        worker={w}
+        showInfo={appointmentOptionSelected}
+        index={i}
+        isFree={false}
+      />
+    {/each}
+    <!-- {/key}
+    {/key} -->
   </div>
 </main>
