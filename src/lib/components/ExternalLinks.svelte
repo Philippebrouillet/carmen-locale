@@ -18,7 +18,7 @@
   ];
 
   const externalLinksButtonsCssByTheme: Record<LocationTheme, string> = {
-    NEUTRAL: "text-primary border-primary hover:bg-primary hover:text-primary ",
+    NEUTRAL: "bg-white text-primary border-primary hover:bg-primary hover:text-primary ",
     PINK: "text-pink border-pink hover:bg-pink hover:text-pink ",
     CARDEN: "text-blue border-blue hover:bg-blue hover:text-blue ",
   };
