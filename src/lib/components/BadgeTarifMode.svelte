@@ -18,7 +18,7 @@
   const dataByTarifMode: Record<string, { icon: any; text: string }> = {
     RARE: { icon: AlarmClock, text: m.lastPlace() },
     LOW_DEMAND: { icon: ThumbsUp, text: m.smartRate() },
-    HiGH_DEMAND: { icon: BarChart, text: m.highDemand() },
+    HIGH_DEMAND: { icon: BarChart, text: m.highDemand() },
   };
 
   $: location = $locationStore.location;
