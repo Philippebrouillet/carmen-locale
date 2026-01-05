@@ -85,7 +85,7 @@
   $: cardenFee = (priceWithDiscountPrice * 3) / 100;
   $: isDefaultFees = cardenFee < minimumServiceFeeInCents;
   $: finalCardenFees = isDefaultFees ? minimumServiceFeeInCents : cardenFee;
-  $: isSuperiorDiscounted = selectedService?.discountedPrice || 0 > selectedService?.price;
+  $: isSuperiorDiscounted = (selectedService?.discountedPrice || 0) > selectedService?.price;
   $: feesWithAccompte = finalCardenFees + defaultAcomptePrice;
   $: totalToPayInPlace = displayPriceInDollars(
     priceWithDiscountPrice + finalCardenFees - feesWithAccompte,
