@@ -31,8 +31,8 @@
   $: theme = $location.location.theme;
 </script>
 
+<!-- in:fly={{ x: 40, duration: 300, delay: 100 * index }} -->
 <button
-  in:fly|global={{ x: 40, duration: 300, delay: 100 * index }}
   on:click={() => {
     selectedWorkerId = worker.id;
     selectedSlotTime = worker.nextAvailable?.next;
