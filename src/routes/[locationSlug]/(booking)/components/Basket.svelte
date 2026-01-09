@@ -25,9 +25,10 @@
     TrendingUp,
     Wallet,
   } from "lucide-svelte";
-  import PopupInfosBasket from "./PopupInfosBasket.svelte";
 
-  type PopupType = "ACOMPTE" | "FEES90" | "FEES30" | "HOURS" | "REDUCTION" | "MAJORATION";
+  import type { PopupType } from "$src/types/PopupInfos";
+  import Popup from "$src/lib/components/popup/Popup.svelte";
+
   type PaymentConfig = "FULL" | "FULLWITHCHOICES" | "ACCOMPTE" | "PAYONLINE";
 
   const paymentConfig: PaymentConfig = "FULL";
@@ -54,13 +55,13 @@
 
   let isPaymentPopupOpen = false;
   let stripe: Stripe | null = null;
-  let popupInfosOpen: PopupType | null = null;
+  let popupTypeOpen: PopupType | null = null;
   let paymentMethod: "credit-card" | "in-store" = ["PAYONLINE", "ACCOMPTE"].includes(paymentConfig)
     ? "credit-card"
     : "in-store";
 
   const openPopupInfo = (type: PopupType) => {
-    popupInfosOpen = type;
+    popupTypeOpen = type;
   };
 
   onMount(async () => {
@@ -166,7 +167,7 @@
                   {isSuperiorDiscounted ? m.surcharge() : m.discount()}
                   <button
                     on:click={() => {
-                      const type = isSuperiorDiscounted ? "MAJORATION" : "REDUCTION";
+                      const type = isSuperiorDiscounted ? "MAJORATION" : "REDUCTIONWITHDISCOUNT";
                       openPopupInfo(type);
                     }}
                   >
@@ -402,4 +403,4 @@
   </div>
 {/if}
 
-<PopupInfosBasket bind:popupInfosOpen />
+<Popup bind:popupTypeOpen />

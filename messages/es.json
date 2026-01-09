@@ -164,5 +164,17 @@
   "popupInfosListInfosHours2": "Notificación por SMS antes de tu visita",
   "popupInfosEconomy": "Ahorros logrados",
   "popupInfosAcompteNote": "En caso de no presentación, este depósito será devuelto al profesional para compensar el tiempo perdido.",
-  "popupInfosButtonGotIt": "Entiendo"
+  "popupInfosButtonGotIt": "Entiendo",
+  "otherAvaiblePro": "Otros profesionales disponibles",
+  "serviceWithoutCategory": "Sin categorizar",
+  "recap": "Resumen",
+  "popupInfosTitleCancelReservation": "¿Cancelación de reserva? ",
+  "popupInfosTextCancelReservation1": "¿Estás seguro que deseas liberar el espacio?",
+  "popupInfosTextCancelReservation2": "El depósito entregado queda definitivamente adquirido por el profesional.",
+  "popupInfosButtonConfirmCancelReservation": "Sí, cancelar",
+  "popupInfosButtonCancelCancelReservation": "No, quédate",
+  "popupInfosTitleHourChange": "¿Por qué cambia la hora?",
+  "popupInfosTextHourChange": "Ajustamos tu agenda en tiempo real según el progreso del profesional en el salón.",
+  "popupInfosTextHourChange2": "Esto le ahorra tiempo de espera adicional en el sitio en caso de retrasos.",
+  "popupInfosListInfosHourChange": "Notificación por SMS antes de tu visita"
 }

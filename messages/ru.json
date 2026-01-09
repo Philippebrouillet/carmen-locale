@@ -164,5 +164,17 @@
   "popupInfosListInfosHours2": "SMS-уведомление перед вашим визитом",
   "popupInfosEconomy": "Достигнутая экономия",
   "popupInfosAcompteNote": "В случае неявки, внесенный залог будет возвращен специалисту в качестве компенсации за потерянное время.",
-  "popupInfosButtonGotIt": "Понятно"
+  "popupInfosButtonGotIt": "Понятно",
+  "otherAvaiblePro": "Другие доступные специалисты",
+  "serviceWithoutCategory": "Без категории",
+  "recap": "Краткое содержание",
+  "popupInfosTitleCancelReservation": "Отмена бронирования? ",
+  "popupInfosTextCancelReservation1": "Вы уверены, что хотите освободить слот?",
+  "popupInfosTextCancelReservation2": "Внесенный депозит окончательно закрепляется за специалистом.",
+  "popupInfosButtonConfirmCancelReservation": "Да, отменить",
+  "popupInfosButtonCancelCancelReservation": "нет, продолжай",
+  "popupInfosTitleHourChange": "Почему меняется время?",
+  "popupInfosTextHourChange": "Мы корректируем ваше расписание в режиме реального времени в зависимости от хода работы специалиста в салоне.",
+  "popupInfosTextHourChange2": "Это позволит вам сэкономить дополнительное время ожидания на месте в случае задержек.",
+  "popupInfosListInfosHourChange": "SMS-уведомление перед вашим визитом"
 }

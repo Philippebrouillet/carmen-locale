@@ -33,6 +33,9 @@
 
   onMount(() => {
     resetShopStore();
+    const cleanUrl = new URL(window.location.href);
+    cleanUrl.search = ""; // vide tous les params
+    window.history.replaceState({}, "", cleanUrl.toString());
   });
 </script>
 
@@ -52,7 +55,7 @@
       {locationStatus}
     />
 
-    <div class="lg:absolute lg:right-0 lg:h-[165%] lg:w-1/3 px-4">
+    <div class="lg:absolute lg:right-0 lg:h-[169.8%] lg:w-1/3 px-4">
       <div
         class="w-full flex flex-col items-center py-6 px-0 gap-6 lg:border lg:rounded-3xl lg:shadow-xl lg:py-8 lg:px-8 lg:sticky lg:top-10"
       >

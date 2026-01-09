@@ -37,8 +37,24 @@ export function computeQueue(
     if (status !== "AVAILABLE" && status !== "UNAVAILABLE" && status !== "STOPED") {
       status = "STOPED";
     }
-    const nextAvailable = nextAvailableTime(waitingTickets, now, start, durationS);
-    const formatedStatus = getWorkerFormatedStatus(w, nextAvailable?.next);
+
+    const endWorkerDate = new Date(now);
+    endWorkerDate.setHours(w.endHour, w.endMinute, 0, 0);
+    const startWorkerDate = new Date(now);
+    startWorkerDate.setHours(w.startHour, w.startMinute, 0, 0);
+
+    const nextAvailable = nextAvailableTime(waitingTickets, now, start, durationS, w);
+    const isWorking = now <= endWorkerDate && now >= startWorkerDate && status === "AVAILABLE";
+    const isFullSlotBooked = nextAvailable.next.getTime() >= endWorkerDate.getTime();
+
+    const formatedStatus = getWorkerFormatedStatus(
+      w,
+      nextAvailable?.next,
+      isWorking,
+      isFullSlotBooked,
+      nextAvailable.isLate,
+    );
+
     const workerQueue = {
       id: w.id,
       name: w.name,
@@ -49,7 +65,12 @@ export function computeQueue(
       waitingSince,
       nextAvailable: nextAvailable,
       formatedStatus: formatedStatus,
+      startWorkerDate,
+      endWorkerDate,
+      isWorking,
+      isFullSlotBooked,
     };
+
     workersQueues.push(workerQueue);
   }
 
@@ -88,22 +109,34 @@ export function nextAvailableTime(
   now: Date,
   start: Date,
   durationS = 15 * 60,
-): { ticketBefore: number; next: Date; isFirstSlot: boolean; createHole: boolean } {
+  worker,
+): {
+  ticketBefore: number;
+  next: Date;
+  isFirstSlot: boolean;
+  createHole: boolean;
+  isLate?: boolean;
+  timeLate?: number;
+} {
   // We only keep ticket that are not RDV for current day
   if (!sameDay(now, start)) {
     tickets = tickets.filter((t) => t.rdvTime && t.rdvTime.getTime() > start.getTime());
   }
 
-  let withTime = ticketsWithTime(tickets, now);
+  const withTime = ticketsWithTime(tickets, now);
+
   let ticketBefore = 0;
   let isFirstSlot = true;
 
   if (withTime.length == 0) {
+    // if (worker?.name === "Benjamin") {
+    //   console.log("al?");
+    // }
     return { ticketBefore, next: start, isFirstSlot, createHole: now.getTime() < start.getTime() };
   }
 
   for (let t of withTime) {
-    let ticketEnd = t.time.getTime() + t.durationS * 1000;
+    const ticketEnd = t.time.getTime() + t.durationS * 1000;
     if (ticketEnd < start.getTime()) {
       ticketBefore += 1;
       continue;
@@ -119,7 +152,15 @@ export function nextAvailableTime(
     }
     if (duration >= durationS * 1000) {
       const next = new Date(slotStart);
-      return { ticketBefore, next, isFirstSlot, createHole };
+
+      return {
+        ticketBefore,
+        next,
+        isFirstSlot,
+        createHole,
+        isLate: true,
+        timeLate: start.getTime() - next.getTime(),
+      };
     }
     if (duration > 0) {
       isFirstSlot = false;
@@ -127,12 +168,23 @@ export function nextAvailableTime(
     ticketBefore += 1;
   }
 
-  let last = withTime[tickets.length - 1];
-
+  const last = withTime[tickets.length - 1];
   const next = new Date(last.time.getTime() + last.durationS * 1000);
+  // if (worker?.name === "Augustin") {
+  //   console.log("last", start);
+  //   console.log("next", next);
+  // }
 
+  // ticket is late
   if (start.getTime() > next.getTime()) {
-    return { ticketBefore, next: start, isFirstSlot, createHole: true };
+    return {
+      ticketBefore,
+      next: start,
+      isFirstSlot,
+      createHole: true,
+      isLate: true,
+      timeLate: start.getTime() - next.getTime(),
+    };
   }
   // if next is after planning end return null
 
@@ -172,31 +224,44 @@ function ticketsWithTime(tickets: TicketInfo[], now: Date): TicketInfoWithTime[]
   return withTimes;
 }
 
-const getWorkerFormatedStatus = (worker: WorkerInfo, nextAvailableTime: Date | null) => {
+const getWorkerFormatedStatus = (
+  worker: WorkerInfo,
+  nextAvailableTime: Date | null,
+  isWorkingTime: boolean,
+  isFullSlotBooked: boolean,
+  isLate?: boolean,
+) => {
   let status: FormatedProStatus = "unavailable";
   const now = new Date(get(clock));
   const start = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutes from now
   const minDuration = 5 * 60 * 1000; // 5 minutes in ms
 
-  const endWorkerDate = new Date(now);
-  endWorkerDate.setHours(worker.endHour, worker.endMinute, 0, 0);
-  const startWorkerDate = new Date(now);
-  startWorkerDate.setHours(worker.startHour, worker.startMinute, 0, 0);
-
   // Check if current time is within worker's working hours
-  if (now >= endWorkerDate || now <= startWorkerDate) {
-    return "unavailable";
+  if (
+    !isWorkingTime ||
+    worker.status === "STOPED" ||
+    nextAvailableTime == null ||
+    isFullSlotBooked
+  ) {
+    status = "unavailable";
+    return status;
   }
 
-  if (nextAvailableTime != null && worker.status != "STOPED") {
-    // Check if the next available time is within the minDuration from start
-    if (Math.abs(nextAvailableTime.getTime() - start.getTime()) < minDuration) {
-      status = "available";
-    } else {
-      status = "waiting";
-    }
-  } else {
-    status = "unavailable";
+  if (worker.name === "Benjamin") {
+    console.log("isLate", isLate);
   }
+
+  if (isLate) {
+    status = "waiting";
+    return status;
+  }
+
+  // Check if the next available time is within the minDuration from start
+  if (Math.abs(nextAvailableTime.getTime() - start.getTime()) < minDuration) {
+    status = "available";
+  } else {
+    status = "waiting";
+  }
+
   return status;
 };

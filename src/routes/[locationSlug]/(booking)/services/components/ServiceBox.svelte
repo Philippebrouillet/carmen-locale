@@ -17,7 +17,7 @@
     CARDEN: "bg-[#F8FAFD]",
   };
 
-  let isOpenFullDescription = false;
+  let isOpenFullDescription = ["Nouveau", "Événement", "Combo"].includes(service.tag);
 </script>
 
 <a

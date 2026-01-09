@@ -164,5 +164,17 @@
   "popupInfosListInfosHours2": "إشعار عبر الرسائل النصية القصيرة قبل زيارتك",
   "popupInfosEconomy": "الوفورات المحققة",
   "popupInfosAcompteNote": "في حالة عدم الحضور، سيتم رد هذا المبلغ المدفوع إلى المحترف لتعويض الوقت الضائع.",
-  "popupInfosButtonGotIt": "فهمتها"
+  "popupInfosButtonGotIt": "فهمتها",
+  "otherAvaiblePro": "المهنيون الآخرون المتاحون",
+  "serviceWithoutCategory": "غير مصنف",
+  "recap": "ملخص",
+  "popupInfosTitleCancelReservation": "إلغاء الحجز؟ ",
+  "popupInfosTextCancelReservation1": "هل أنت متأكد من رغبتك في إخلاء المساحة؟",
+  "popupInfosTextCancelReservation2": "يتم الحصول على مبلغ التأمين المدفوع بشكل نهائي من قبل المحترف.",
+  "popupInfosButtonConfirmCancelReservation": "نعم، إلغاء",
+  "popupInfosButtonCancelCancelReservation": "لا، احتفظ",
+  "popupInfosTitleHourChange": "لماذا يتغير الوقت؟",
+  "popupInfosTextHourChange": "نقوم بتعديل جدولك الزمني في الوقت الفعلي وفقًا لتقدم المحترف في الصالون.",
+  "popupInfosTextHourChange2": "هذا يوفر عليك وقت انتظار إضافي في الموقع في حالة حدوث تأخيرات.",
+  "popupInfosListInfosHourChange": "إشعار عبر الرسائل النصية القصيرة قبل زيارتك"
 }

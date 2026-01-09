@@ -42,11 +42,21 @@ export const proBackgroundColorByFormatedStatus: Record<FormatedProStatus, strin
 export const getLocationStatus = (workers: QueueInfo[]): LocationStatus => {
   if (!workers.length) return "closed";
 
-  const available = workers.filter((w) => w.formatedStatus !== "unavailable");
+  const workingWorkers = workers.filter((w) => w.status === "AVAILABLE" && w.isWorking);
+
+  if (
+    workingWorkers.length > 0 &&
+    workingWorkers.every((w) => {
+      return w.isFullSlotBooked;
+    })
+  ) {
+    return "full";
+  }
+
+  const available = workers.filter((w) => ["waiting", "available"].includes(w.formatedStatus));
 
   if (!available.length) return "closed";
-
-  return available.every((w) => w.formatedStatus === "waiting") ? "full" : "open";
+  return "open";
 };
 
 export const mainBackgroundColorByTheme: Record<LocationTheme, string> = {
@@ -55,28 +65,32 @@ export const mainBackgroundColorByTheme: Record<LocationTheme, string> = {
   CARDEN: "bg-[#F8FAFC]",
 };
 
+export const formatTickets = (tickets: ServerTicketInfo[]) => {
+  return tickets?.map((t: ServerTicketInfo) => {
+    return {
+      id: t.id,
+      workerId: t.workerId,
+      durationS: t.durationS,
+      canceledTime: t.canceledTime ? new Date(t.canceledTime) : null,
+      doneTime: t.doneTime ? new Date(t.doneTime) : null,
+      rdvTime: t.rdvTime ? new Date(t.rdvTime) : null,
+      startedTime: t.startedTime ? new Date(t.startedTime) : null,
+      details: t.details,
+    };
+  });
+};
+
 export const formatLocationResponse = (locationResp: any) => {
   const workers = locationResp.queueLines
     .flatMap((ql) => ({
       ...ql.worker,
-      tickets: ql.tickets?.map((t: ServerTicketInfo) => {
-        return {
-          id: t.id,
-          workerId: t.workerId,
-          durationS: t.durationS,
-          canceledTime: t.canceledTime ? new Date(t.canceledTime) : null,
-          doneTime: t.doneTime ? new Date(t.doneTime) : null,
-          rdvTime: t.rdvTime ? new Date(t.rdvTime) : null,
-          startedTime: t.startedTime ? new Date(t.startedTime) : null,
-          details: t.details,
-        };
-      }),
+      tickets: formatTickets(ql.tickets),
     }))
     .filter((w) => w != null && w.name);
 
   const locationInfo: LocationInfoResp = {
     location: locationResp.location,
-    services: locationResp.location.catalog.filter((s) => s.status === "ENABLED") ?? [],
+    services: locationResp.location.catalog ?? [],
     workers: workers,
     planning: [],
   };

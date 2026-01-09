@@ -2,15 +2,27 @@
   import SuccessIcon from "$lib/assets/icons/SuccessIcon.svelte";
   import { displayWaitingTime } from "$lib/formater";
   import * as m from "$lib/paraglide/messages.js";
-  import { Dock, Store, Wallet } from "lucide-svelte";
+  import type { PopupType } from "$src/types/PopupInfos";
+  import type { TicketPaymentType, TicketStatus } from "$src/types/Ticket";
+  import { Bell, Clock3, Dock, InfoIcon, Store, Wallet } from "lucide-svelte";
 
   export let ticket;
+  export let isTicketGeneratedByPro;
+  export let isTicketGeneratedByClient;
   export let prestation;
+  export let ticketStatus: TicketStatus;
+  export let popupType: PopupType | null;
 
-  const ticketNumber = ticket.details.number;
-  const expectedTime = displayWaitingTime(new Date(ticket.expectedTime));
-  $: badgeStatus = ticket.status || "paid";
-  const dataBadgeByStatus = {
+  $: ticketNumber = ticket.details.number;
+  $: expectedTime = displayWaitingTime(new Date(ticket.expectedTime));
+
+  const defaultStatusBadge: TicketPaymentType = "toPayOnPlace";
+
+  let badgePaymentStatus: TicketPaymentType = defaultStatusBadge;
+
+  $: badgePaymentStatus = ticket.status || defaultStatusBadge;
+
+  const dataBadgePaiementByPaymentType = {
     acompte_verse: {
       text: "Acompte versé",
       icon: Wallet,
@@ -24,8 +36,35 @@
       icon: Dock,
       bg: "bg-[#23BBAC]",
     },
-  };
-  $: badgeInfo = dataBadgeByStatus[badgeStatus];
+  } satisfies Record<TicketPaymentType, { text: string; icon: typeof Wallet; bg?: string }>;
+
+  const dataBadgeInfosByStatus = {
+    coming: { text: "Heure estimée", icon: Clock3 },
+    youAreNext: {
+      text: "C'est bientôt à vous",
+      icon: Clock3,
+      bg: "bg-[#00D4AA]",
+      textColor: "text-white",
+    },
+    iminent: { text: "Passage imminent", icon: Bell, bg: "bg-[#00D4AA]", textColor: "text-white" },
+    // done: { text: "Service terminé", icon: SuccessIcon, bg: "bg-[#23BBAC]", textColor: "text-white" },
+    inProgress: { text: "Heure de fin estimée", icon: Clock3 },
+    yourTurn: null,
+
+    isLate: { text: "Retard signalé", icon: Clock3, textColor: "text-[#FF834D]" },
+  } satisfies Record<
+    TicketStatus,
+    { text: string; icon: typeof Clock3; bg?: string; textColor?: string } | null
+  >;
+
+  $: isShowTextStatus =
+    ticketStatus === "done" ||
+    ticketStatus === "cancelled" ||
+    ticketStatus === "cancelledByPro" ||
+    ticketStatus === "inProgress" ||
+    ticketStatus === "yourTurn";
+  $: badgePaymentInfos = dataBadgePaiementByPaymentType[badgePaymentStatus];
+  $: badgeInfosByStatus = dataBadgeInfosByStatus[ticketStatus];
 </script>
 
 <div
@@ -35,32 +74,90 @@
     <p class="font-bold text-xs px-2 py-1 bg-[#F7F7F7] text-[#616163] rounded-[5px]">
       #{ticketNumber}
     </p>
-    <div
-      class="py-1 px-2 rounded-lg flex flex-row gap-1.5 items-center text-white {badgeInfo.bg
-        ? badgeInfo.bg
-        : 'bg-black'}"
-    >
-      <svelte:component this={badgeInfo.icon} size="14" />
-      <p class="font-bold uppercase text-xs">{badgeInfo.text}</p>
-    </div>
+
+    {#if isTicketGeneratedByClient && badgePaymentInfos}
+      <div
+        class="py-1 px-2 rounded-lg flex flex-row gap-1.5 items-center text-white {'bg' in
+        badgePaymentInfos
+          ? badgePaymentInfos.bg
+          : 'bg-black'}"
+      >
+        <svelte:component this={badgePaymentInfos.icon} size="14" />
+        <p class="font-bold uppercase text-xs">{badgePaymentInfos.text}</p>
+      </div>
+    {/if}
   </div>
+
   <div class="flex flex-col items-center gap-6">
     <div class="flex flex-col gap-2 items-center">
       <p class="font-bold text-secondary uppercase text-sm">
-        {new Date(ticket.expectedTime).toLocaleDateString("fr-FR", {
-          weekday: "short",
-          day: "numeric",
-          month: "short",
-        })}
+        {new Date(ticket.expectedTime).toDateString() === new Date().toDateString()
+          ? "Aujourd'hui"
+          : new Date(ticket.expectedTime).toLocaleDateString("fr-FR", {
+              weekday: "short",
+              day: "numeric",
+              month: "short",
+            })}
       </p>
-      <div class="font-bold text-primary flex items-center justify-center gap-2 max-h-[60px]">
-        <span class="text-[3.75rem]">{expectedTime} </span>
-        <div class="border rounded-full p-1.5 self-start border-[#616163]">
-          <div class=" h-2 w-2 rounded-full bg-[#616163]" />
-        </div>
+      <div class="font-bold text-primary flex items-center justify-center gap-2 max-h-[60px] mb-2">
+        <span class=" {isShowTextStatus ? 'text-[2.875rem]' : 'text-6xl'}">
+          {#if ticketStatus === "done"}
+            Terminé
+          {:else if ticketStatus === "cancelled" || ticketStatus === "cancelledByPro"}
+            Annulé
+          {:else if ticketStatus === "inProgress"}
+            En cours
+          {:else if ticketStatus === "yourTurn"}
+            Maintenant
+          {:else}
+            {expectedTime}
+          {/if}
+        </span>
+        {#if ticketStatus === "coming" || ticketStatus === "youAreNext" || ticketStatus === "iminent"}
+          <div class="border rounded-full p-1.5 self-start border-[#616163]">
+            <div class=" h-2 w-2 rounded-full bg-[#616163]" />
+          </div>
+        {/if}
       </div>
-      <p class="font-bold text-secondary uppercase text-sm">Horaire prévue</p>
+      {#if isTicketGeneratedByClient}
+        {#if badgeInfosByStatus}
+          <div
+            class=" py-1 px-2 rounded-2xl {'bg' in badgeInfosByStatus
+              ? `${badgeInfosByStatus.bg} `
+              : 'bg-[#DFE5E7] bg-opacity-30 '} {'textColor' in badgeInfosByStatus
+              ? badgeInfosByStatus.textColor
+              : 'text-[#616163]'}   flex items-center gap-1"
+          >
+            <svelte:component this={badgeInfosByStatus.icon} size="14" />
+
+            <p class="text-xs font-extrabold uppercase {badgeInfosByStatus.textColor}">
+              {badgeInfosByStatus.text}
+            </p>
+
+            {#if ticketStatus === "inProgress"}
+              <span class="text-xs font-extrabold">
+                {new Date(ticket.expectedTime).toLocaleTimeString("fr-FR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            {/if}
+          </div>
+        {/if}
+      {:else}
+        <p class="font-bold text-secondary uppercase text-sm">Horaire prévue</p>
+      {/if}
     </div>
+
+    {#if isTicketGeneratedByClient && ticketStatus !== "yourTurn" && ticketStatus !== "inProgress" && ticketStatus !== "done"}
+      <p class="text-[#616163] text-xs flex items-center gap-1">
+        Estimation dynamique liée à l’activité sur place <button
+          on:click={() => (popupType = "HOUR_CHANGE")}
+        >
+          <InfoIcon size="11" class="min-w-[11px] cursor-pointer" />
+        </button>
+      </p>
+    {/if}
 
     <div class="border w-full border-dashed border-[#DFE5E7]"></div>
     {#if prestation}

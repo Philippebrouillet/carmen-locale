@@ -164,5 +164,17 @@
   "popupInfosListInfosHours2": "आपकी यात्रा से पहले एसएमएस सूचना",
   "popupInfosEconomy": "बचत हासिल हुई",
   "popupInfosAcompteNote": "यदि आप उपस्थित नहीं होते हैं, तो यह जमा राशि पेशेवर को समय की हानि की भरपाई के लिए वापस कर दी जाएगी।",
-  "popupInfosButtonGotIt": "समझ गया"
+  "popupInfosButtonGotIt": "समझ गया",
+  "otherAvaiblePro": "अन्य उपलब्ध पेशेवर",
+  "serviceWithoutCategory": "अवर्गीकृत",
+  "recap": "सारांश",
+  "popupInfosTitleCancelReservation": "आरक्षण रद्द करना? ",
+  "popupInfosTextCancelReservation1": "क्या आप वाकई इस स्लॉट को खाली करना चाहते हैं?",
+  "popupInfosTextCancelReservation2": "भुगतान की गई जमा राशि पेशेवर द्वारा निश्चित रूप से प्राप्त कर ली जाती है।",
+  "popupInfosButtonConfirmCancelReservation": "हाँ, रद्द करें",
+  "popupInfosButtonCancelCancelReservation": "नहीं, रखो",
+  "popupInfosTitleHourChange": "समय क्यों बदलता है?",
+  "popupInfosTextHourChange": "हम सैलून में पेशेवर की प्रगति के अनुसार आपके शेड्यूल को वास्तविक समय में समायोजित करते हैं।",
+  "popupInfosTextHourChange2": "इससे देरी होने की स्थिति में आपको घटनास्थल पर अतिरिक्त प्रतीक्षा समय की बचत होती है।",
+  "popupInfosListInfosHourChange": "आपकी यात्रा से पहले एसएमएस सूचना"
 }

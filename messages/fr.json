@@ -40,7 +40,7 @@
   "joinSocialNetworks": "Rejoindre nos réseaux sociaux",
   "overviewTitle": "Vue d'ensemble de l'activité de {name}",
   "ticketProgress": "Ticket en cours",
-  "queueProgress": "personnes devant vous",
+  "queueProgress": "pers. dans la file devant vous",
   "waitInfo": "Environ {duration} min d’attente",
   "smsAlert": "Je souhaite recevoir une alerte SMS pour me prévenir de mon passage",
   "validateSms": "Valider l'alerte SMS",
@@ -164,5 +164,17 @@
   "popupInfosListInfosHours2": "Notification SMS avant votre passage",
   "popupInfosEconomy": "Économies réalisées",
   "popupInfosAcompteNote": "En cas de non présentation, cet acompte sera reversé au professionnel pour compenser la perte de temps",
-  "popupInfosButtonGotIt": "J'ai compris"
+  "popupInfosButtonGotIt": "J'ai compris",
+  "otherAvaiblePro": "Les autres professionnels disponibles",
+  "serviceWithoutCategory": "Sans catégorie",
+  "recap": "Récapitulatif",
+  "popupInfosTitleCancelReservation": "Annulation de réservation ? ",
+  "popupInfosTextCancelReservation1": "Êtes-vous sûr de vouloir libérer le créneau ?",
+  "popupInfosTextCancelReservation2": "L'acompte versé est définitivement acquis pour le professionnel.",
+  "popupInfosButtonConfirmCancelReservation": "oui, annuler",
+  "popupInfosButtonCancelCancelReservation": "non, conserver",
+  "popupInfosTitleHourChange": "Pourquoi l’heure change ?",
+  "popupInfosTextHourChange": "Nous ajustons votre horaire en temps réel selon l’avancement du professionnel au salon.",
+  "popupInfosTextHourChange2": "Cela vous évite l’attente supplémentaire sur place en cas de retard.",
+  "popupInfosListInfosHourChange": "Notification SMS avant votre passage"
 }

@@ -3,6 +3,7 @@
   import { page } from "$app/stores";
   import BackIcon from "$lib/assets/icons/BackIcon.svelte";
   import Breadcrumb from "$lib/components/Breadcrumb.svelte";
+  import BreadCrumpV2 from "$src/lib/components/BreadCrumpV2.svelte";
   import { clock } from "$src/lib/stores/clock.svelte";
   import { location } from "$src/lib/stores/location.store";
   import { computeQueue } from "$src/services/QueueLine";
@@ -14,8 +15,9 @@
 
   const navigateBack = (): void => {
     if (
-      $page.url.href.includes("services") &&
-      workers.filter((w) => w.formatedStatus === "available").length === 1
+      ($page.url.href.includes("services") &&
+        workers.filter((w) => w.formatedStatus === "available").length === 1) ||
+      $page.url.href.includes("professional")
     )
       goto(`/${$page.params.locationSlug}`);
     else history.back();
@@ -23,7 +25,8 @@
 </script>
 
 <div class="hidden md:flex flex-col items-start justify-center gap-10 pt-4">
-  <Breadcrumb />
+  <!-- <Breadcrumb /> -->
+  <BreadCrumpV2 />
   <h2 class="font-bold text-2xl md:-mt-4 hidden md:block">
     {text == "Choisissez votre pro." ? "Choisissez votre professional" : text}
   </h2>

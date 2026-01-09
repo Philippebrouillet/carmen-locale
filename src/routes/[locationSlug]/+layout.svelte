@@ -11,7 +11,6 @@
   let eventSource: EventSource | null = null;
 
   location.set(data);
-  setContext("location", location);
 
   async function refreshLocation() {
     const slug = $page.params.locationSlug;
@@ -25,6 +24,7 @@
 
   function onSyncEvent(mess: MessageEvent<any>) {
     const parsed = JSON.parse(mess.data);
+
     if (parsed.type == "sync-v2") {
       refreshLocation();
     } else if (parsed.type == "updateWorkerTime") {
@@ -65,9 +65,9 @@
         });
 
       const workers = queues
-        .filter((q) => q.doctorId != null)
+        .filter((q) => q.doctorId != null) // only keep queues with doctorId // worker with doctorId is worker showable
         .map((w) => ({
-          id: w.doctorId,
+          id: w.id,
           name: w.name,
           avatar: w.avatar,
           status: w.status,
@@ -77,16 +77,13 @@
       location.update((l) => {
         const copy = JSON.parse(JSON.stringify(l));
 
-        if (workers.length < l.workers.length) {
-          copy.workers = l.workers.map((w) => ({
+        copy.workers = l.workers.map((w) => {
+          return {
             ...w,
             ...workers.find((newW) => newW.id == w.id),
-            tickets: tickets.filter((t) => t.workerId == w.id),
-            nextAvailableTime: null,
-          }));
-        } else {
-          copy.workers = workers;
-        }
+            // nextAvailableTime: null,
+          };
+        });
 
         return copy;
       });

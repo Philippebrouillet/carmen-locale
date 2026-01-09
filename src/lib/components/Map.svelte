@@ -6,7 +6,18 @@
   const query = encodeURIComponent(
     `${location.address}, ${location.zipCode} ${location.city}, France`,
   );
-  const mapSrc = `https://www.google.com/maps?q=${query}&output=embed`;
+
+  let retry = 0;
+  const MAX_RETRY = 3;
+
+  $: mapSrc = `https://www.google.com/maps?q=${query}&output=embed&retry=${retry}`;
+
+  function handleError() {
+    console.log("Map load error, retrying...", retry);
+    if (retry < MAX_RETRY) {
+      retry += 1;
+    }
+  }
 </script>
 
 <iframe
@@ -14,4 +25,5 @@
   class="aspect-[16/9] w-full max-h-96 shadow-lg rounded-2xl"
   src={mapSrc}
   loading="lazy"
+  on:error={handleError}
 />

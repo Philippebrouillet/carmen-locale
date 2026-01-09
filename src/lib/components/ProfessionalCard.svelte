@@ -19,9 +19,13 @@
   $: isPinkThemeAndWaiting = theme === "PINK" && status === "waiting";
   $: status = worker.formatedStatus;
   $: nextAvailableTime = worker.nextAvailable?.next;
+  $: disabled = worker.formatedStatus === "unavailable";
 </script>
 
-<div class=" w-full rounded-[1.28rem] shadow-md overflow-hidden bg-white mx-auto">
+<div
+  class:opacity-90={disabled}
+  class=" w-full rounded-[1.28rem] shadow-md overflow-hidden bg-white mx-auto"
+>
   <div class="w-full aspect-square">
     {#if worker.avatar}
       <img
@@ -64,7 +68,15 @@
         <p class="">{displayDuration(duration)}</p>
       {/if}
     </div>
-    <Button {href} class="hover:scale-[0.96] w-full mt-4 {background}">
+    <Button
+      {href}
+      class="hover:scale-[0.96] w-full mt-4 {disabled
+        ? 'opacity-20 cursor-not-allowed'
+        : ''} {background}"
+      on:click={(e) => {
+        if (disabled) e.preventDefault();
+      }}
+    >
       {m.bookWith({ name: worker.name })}
     </Button>
   </div>

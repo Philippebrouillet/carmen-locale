@@ -8,7 +8,6 @@
   import { shopStore } from "$src/lib/stores/basketStore";
   import { location } from "$src/lib/stores/location.store";
   import type { QueueInfo } from "$src/types/QueueLine";
-  import { fly } from "svelte/transition";
 
   export let worker: QueueInfo;
   export let showInfo: boolean | undefined;
@@ -31,7 +30,7 @@
   $: theme = $location.location.theme;
 </script>
 
-<!-- in:fly={{ x: 40, duration: 300, delay: 100 * index }} -->
+<!-- in:fly|global={{ x: 40, duration: 300, delay: 100 * index }} -->
 <button
   on:click={() => {
     selectedWorkerId = worker.id;

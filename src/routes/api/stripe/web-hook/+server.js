@@ -1,4 +1,4 @@
-import { SECRET_STRIPE_KEY } from "$env/static/private";
+import { SECRET_STRIPE_KEY, STRIPE_WEBHOOK_SECRET } from "$env/static/private";
 import Stripe from "stripe";
 
 /** @type {Stripe.Event[]} */

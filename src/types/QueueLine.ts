@@ -15,6 +15,10 @@ export type QueueInfo = {
   nextAvailable: NextAvailable | null;
   waitingSince: Date | null;
   formatedStatus: FormatedProStatus;
+  startWorkerDate: Date;
+  endWorkerDate: Date;
+  isWorking: boolean;
+  isFullSlotBooked: boolean;
 };
 
 /**

@@ -1,0 +1,10 @@
+export type PopupType =
+  | "ACOMPTE"
+  | "FEES90"
+  | "FEES30"
+  | "HOURS"
+  | "REDUCTION"
+  | "REDUCTIONWITHDISCOUNT"
+  | "MAJORATION"
+  | "CANCEL_RESERVATION"
+  | "HOUR_CHANGE";

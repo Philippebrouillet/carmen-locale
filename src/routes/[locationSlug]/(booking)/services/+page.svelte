@@ -8,8 +8,12 @@
   import { Tag, TrendingUp } from "lucide-svelte";
   import type { LocationTheme } from "$src/types/Location";
 
+  import type { PopupType } from "$src/types/PopupInfos";
+  import Popup from "$src/lib/components/popup/Popup.svelte";
+
   export let data;
 
+  let popupTypeOpen: PopupType | null = null;
   let selectedServiceID: number | null = null;
 
   function createServiceUrl(serviceId: number) {
@@ -35,6 +39,7 @@
   $: backgroundColor = backgroundColorByTheme[theme];
   $: haveUpPrice = services.some((s) => s.discountedPrice && s.discountedPrice > s.price);
   $: haveDownPrice = services.some((s) => s.discountedPrice && s.discountedPrice < s.price);
+  $: servicesWithoutCategory = services.filter((s) => !s.categoryId);
 </script>
 
 <main class="w-full flex flex-col">
@@ -80,7 +85,11 @@
         </div>
 
         <p class="text-secondary text-sm">
-          {m.lastMinuteText()} <span class="underline underline-offset-2">{m.moreInfo()}</span>
+          {m.lastMinuteText()}
+          <button
+            on:click={() => (popupTypeOpen = "MAJORATION")}
+            class="underline underline-offset-2">{m.moreInfo()}</button
+          >
         </p>
       </div>
     {/if}
@@ -97,7 +106,11 @@
         </div>
 
         <p class="text-secondary text-sm">
-          {m.lowerPriceText()} <span class="underline underline-offset-2">{m.moreInfo()}</span>
+          {m.lowerPriceText()}
+          <button
+            on:click={() => (popupTypeOpen = "REDUCTION")}
+            class="underline underline-offset-2">{m.moreInfo()}</button
+          >
         </p>
       </div>
     {/if}
@@ -124,5 +137,27 @@
         {/each}
       </div>
     {/each}
+
+    {#if servicesWithoutCategory.length > 0}
+      <div class="mt-6">
+        <h2 class="col-span-full font-bold text-primary mb-4">{m.serviceWithoutCategory()}</h2>
+
+        <div
+          class="grid grid-cols-1 md:grid-cols-2 w-full gap-4 justify-center md:justify-start mb-8"
+        >
+          {#each servicesWithoutCategory as service, i}
+            <ServiceBox
+              {backgroundColor}
+              href={createServiceUrl(service.id)}
+              {service}
+              index={i}
+              selected={selectedServiceID == service.id}
+            />
+          {/each}
+        </div>
+      </div>
+    {/if}
   </div>
 </main>
+
+<Popup bind:popupTypeOpen />

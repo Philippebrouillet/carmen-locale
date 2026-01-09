@@ -11,7 +11,9 @@
   import { goto } from "$app/navigation";
 
   $: start = new Date(new Date($clock).getTime() + 5 * 60 * 1000);
-  $: workers = computeQueue($location, new Date($clock), start);
+  $: workers = computeQueue($location, new Date($clock), start).filter(
+    (w) => w.formatedStatus !== "unavailable",
+  );
   $: theme = $location.location.theme;
 
   $: if (workers.filter((w) => w.formatedStatus === "available").length === 1) {
@@ -28,7 +30,7 @@
 <main class="w-full flex flex-col md:items-start">
   <BookingHeader text={m.chooseProfessional()} />
   <div
-    class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 w-fit md:w-full px-2"
+    class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 w-fit md:w-full px-2 lg:px-0 lg:mt-4"
   >
     <a
       in:fly|global={{ delay: 0, y: 20, duration: 400 }}

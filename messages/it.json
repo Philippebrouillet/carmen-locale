@@ -164,5 +164,17 @@
   "popupInfosListInfosHours2": "Notifica SMS prima della tua visita",
   "popupInfosEconomy": "Risparmi ottenuti",
   "popupInfosAcompteNote": "In caso di mancata presentazione, la caparra verrà restituita al professionista per compensare il tempo perso.",
-  "popupInfosButtonGotIt": "Fatto"
+  "popupInfosButtonGotIt": "Fatto",
+  "otherAvaiblePro": "Altri professionisti disponibili",
+  "serviceWithoutCategory": "Non categorizzato",
+  "recap": "Riepilogo",
+  "popupInfosTitleCancelReservation": "Annullamento della prenotazione? ",
+  "popupInfosTextCancelReservation1": "Sei sicuro di voler liberare lo slot?",
+  "popupInfosTextCancelReservation2": "La caparra versata viene definitivamente acquisita dal professionista.",
+  "popupInfosButtonConfirmCancelReservation": "Sì, annulla",
+  "popupInfosButtonCancelCancelReservation": "no, tieni",
+  "popupInfosTitleHourChange": "Perché l'ora cambia?",
+  "popupInfosTextHourChange": "Adattiamo il tuo programma in tempo reale in base ai progressi del professionista nel salone.",
+  "popupInfosTextHourChange2": "In questo modo si risparmia ulteriore tempo di attesa in loco in caso di ritardi.",
+  "popupInfosListInfosHourChange": "Notifica SMS prima della tua visita"
 }

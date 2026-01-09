@@ -94,7 +94,14 @@
             <CalendarIcon />
           </div>
           <div class="flex flex-col justify-start items-start self-start text-left">
-            <span class="text-lg font-bold">{m.scheduleVisit()}</span>
+            <div class="flex gap-2 items-center">
+              <span class="text-lg font-bold">{m.scheduleVisit()}</span>
+              {#if location.overpriceExternalCalendar}<div
+                  class="bg-black rounded-xl px-1.5 text-white whitespace-nowrap max-h-[18px] py-1.5 h-full flex justify-center items-center text-xs font-bold"
+                >
+                  + {location.overpriceExternalCalendar}€
+                </div>{/if}
+            </div>
             <span class="text-xs font-normal">{m.scheduleVisitDescription()}</span>
           </div>
         </div>

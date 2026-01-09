@@ -6,6 +6,7 @@
   import * as m from "$lib/paraglide/messages.js";
   import { writable } from "svelte/store";
   import { browser } from "$app/environment";
+  import { location } from "../stores/location.store";
 
   let path: string = "";
   let breadcrumbs = [];
@@ -38,16 +39,19 @@
 <Breadcrumb.Root class="hidden md:block">
   <Breadcrumb.List>
     <Breadcrumb.Item>
-      <Breadcrumb.Link href="/">{m.home()}</Breadcrumb.Link>
+      <Breadcrumb.Link href={`/${$location.location.id}`}>{m.home()}</Breadcrumb.Link>
     </Breadcrumb.Item>
     <Breadcrumb.Separator />
 
-    {#each breadcrumbs as { name, href }, i}
-      {#if i > 0}
+    {#each breadcrumbs.filter((b) => Number.isNaN(Number(b.name))) as { name, href }, i}
+      {@const isFirst = i === 0}
+      {@const isLast = i === breadcrumbs.length - 1}
+
+      {#if !isFirst}
         <Breadcrumb.Separator />
       {/if}
       <Breadcrumb.Item>
-        {#if i < breadcrumbs.length - 1}
+        {#if !isLast}
           <Breadcrumb.Link {href}>{name}</Breadcrumb.Link>
         {:else}
           <Breadcrumb.Page>{name}</Breadcrumb.Page>

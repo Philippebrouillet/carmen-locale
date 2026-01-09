@@ -283,5 +283,17 @@
     <Button type="submit" class="rounded-lg min-h-12"
       >{isCreatingTicket ? "..." : m.makeReservation()}</Button
     >
+    <div class="flex justify-center items-center">
+      <p class="text-xs text-primary text-center max-w-[80%]">
+        En cliquant sur le bouton ci-dessus,<br /> vous acceptez les
+        <a class="text-[#0073FF]" href="https://www.carden.app/cgu-cgv"
+          >conditions générales de vente</a
+        >
+        et la
+        <a class="text-[#0073FF]" href="https://www.carden.app/privacy-carden"
+          >Politique de Confidentialité</a
+        >.
+      </p>
+    </div>
   </form>
 </div>

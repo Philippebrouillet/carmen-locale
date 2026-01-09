@@ -18,7 +18,7 @@
   ];
 
   const externalLinksButtonsCssByTheme: Record<LocationTheme, string> = {
-    NEUTRAL: "bg-white text-primary border-primary hover:bg-primary hover:text-primary ",
+    NEUTRAL: "text-primary border-primary bg-white hover:bg-primary hover:text-primary ",
     PINK: "text-pink border-pink hover:bg-pink hover:text-pink ",
     CARDEN: "text-blue border-blue hover:bg-blue hover:text-blue ",
   };
@@ -32,7 +32,7 @@
   {#if haveSomeExternalLinks}
     <div class="lg:hidden px-4 w-full flex flex-col gap-6 mt-1">
       <h2 class="font-bold text-lg md:text-2xl">{m.externalLinksTitle()}</h2>
-      <div class="flex flex-col gap-4 w-full pb-4">
+      <div class="flex flex-col gap-4 w-full pb-4 items-center">
         {#each externalLinks as item}
           {#if item.link}
             <Button
@@ -40,7 +40,7 @@
               variant="outline"
               class="w-full gap-2 {externalLinksButtonsCssByTheme[
                 theme
-              ]} hover:bg-opacity-30 transition-all duration-150 hover:scale-[0.99]"
+              ]} hover:bg-opacity-30  transition-all duration-150 hover:scale-[0.99] w-4/5 flex justify-start pl-14"
             >
               <svelte:component this={item.icon} />
               {item.name}

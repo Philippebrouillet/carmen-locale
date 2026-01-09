@@ -74,21 +74,45 @@
   $: appointmentTimes = computeAppointmentTimes(now, selectedDay, $location.planning);
   $: afterSlots = selectedTimeFilter === "afternoon" ? afternoonSlots : morningSlots;
   // $: filteredAppointmentTimes = selectedTimeFilter === "morning" ? morningSlots : afternoonSlots;
-  $: bookingDelay = $shopStore.bookingDelay ?? "10";
+  $: bookingDelay = $shopStore.bookingDelay ?? 0;
   $: appointmentOptionSelected = $shopStore.bookingType == "appointment" ? true : false;
   $: selectedTime =
     appointmentOptionSelected && appointmentTimes.length > 0
       ? appointmentTimes[0].getTime().toString()
       : null;
-  $: serviceDuration = $shopStore.selectedService?.durationS;
+  // $: serviceDuration = $shopStore.selectedService?.durationS;
   $: start = selectedTime
     ? new Date(+selectedTime)
     : new Date(now.getTime() + Number(bookingDelay) * 60000);
-  $: workers = computeQueue($location, new Date($clock), start, serviceDuration);
+
+  // $: start = new Date(now.getTime() + 5 * 60 * 1000);
+  // $: workers = computeQueue($locationResponseApi, now, start);
+  // $location, new Date($clock), start, serviceDuration
+  // $: workers = computeQueue($location, new Date($clock), start, serviceDuration).filter(
+  //   (w) => !["DISABLED", "STOPED"].includes(w.status),
+  // );
+
+  $: workers = computeQueue($location, new Date($clock), start).filter((w) => {
+    const haveTicketInConflict = w.tickets.find((t) => {
+      if (!t.rdvTime || !t.durationS) return false;
+      const end = t.rdvTime.getTime() + t.durationS * 1000;
+      return start.getTime() > t.rdvTime.getTime() && start.getTime() < end;
+    });
+
+    return w.formatedStatus !== "unavailable" && !haveTicketInConflict;
+  });
+
+  $: console.log("workers", workers);
+
   $: if (appointmentOptionSelected == false) {
     setBookingDate(today(getLocalTimeZone()).toDate(getLocalTimeZone()));
   }
-
+  $: otherWorkers = workers
+    .filter((w) => w.id != filterWorkerId)
+    .filter((w) => start < w.endWorkerDate);
+  $: selectedWorker = workers
+    .filter((w) => w.id == filterWorkerId)
+    .filter((w) => start < w.endWorkerDate);
   // $: {
   //   let locationPlanning = getLocationPlaning($location);
   //   console.log(locationPlanning);
@@ -109,7 +133,7 @@
         <div class="flex flex-col md:flex-row w-full gap-2 justify-between">
           <h2 class="text-lg font-bold">{m.yourArrivalTime()}</h2>
         </div>
-        <div class="grid grid-cols-3 gap-2">
+        <div class="grid grid-cols-4 gap-2">
           {#each bookingDelays as delay, i}
             {@const numberDelay = Number(delay)}
             <button
@@ -203,34 +227,43 @@
       <BadgeTarifMode />
     </div>
     <div class="flex flex-col gap-4 w-full overflow-hidden">
-      <!-- SELECTED WORKER  -->
-      {#each workers.filter((w) => w.id == filterWorkerId) as w, i}
-        <Worker
-          bind:selectedWorkerId
-          bind:selectedSlotTime
-          worker={w}
-          showInfo={appointmentOptionSelected}
-          isFree={w.nextAvailable?.isFirstSlot &&
-            !(appointmentOptionSelected && w.nextAvailable?.createHole)}
-          index={i}
-        />
-      {/each}
+      {#if filterWorkerId}
+        <!-- SELECTED WORKER  -->
+        {#each selectedWorker as w, i}
+          <Worker
+            bind:selectedWorkerId
+            bind:selectedSlotTime
+            worker={w}
+            showInfo={appointmentOptionSelected}
+            isFree={w.nextAvailable?.isFirstSlot &&
+              !(appointmentOptionSelected && w.nextAvailable?.createHole)}
+            index={i}
+          />
+        {/each}
+        {#if otherWorkers.length && selectedWorker.length}
+          <div class="mb-2 mt-4">
+            <h2 class="text-lg font-bold">{m.otherAvaiblePro()}</h2>
+          </div>
+        {/if}
+      {/if}
 
-      <!-- OTHER WORKERS  -->
-      {#key selectedTime}
-        {#key bookingDelay}
-          {#each workers.filter((w) => w.id != filterWorkerId) as w, i}
-            <Worker
-              bind:selectedWorkerId
-              bind:selectedSlotTime
-              worker={w}
-              showInfo={appointmentOptionSelected}
-              index={i}
-              isFree={false}
-            />
-          {/each}
+      {#if otherWorkers.length}
+        <!-- OTHER WORKERS  -->
+        {#key selectedTime}
+          {#key bookingDelay}
+            {#each otherWorkers as w, i}
+              <Worker
+                bind:selectedWorkerId
+                bind:selectedSlotTime
+                worker={w}
+                showInfo={appointmentOptionSelected}
+                index={i}
+                isFree={false}
+              />
+            {/each}
+          {/key}
         {/key}
-      {/key}
+      {/if}
     </div>
   </div>
 </main>

@@ -164,5 +164,17 @@
   "popupInfosListInfosHours2": "SMS-melding voorafgaand aan uw bezoek.",
   "popupInfosEconomy": "Besparingen gerealiseerd",
   "popupInfosAcompteNote": "Bij niet-verschijnen wordt de aanbetaling terugbetaald aan de professional ter compensatie van de verloren tijd.",
-  "popupInfosButtonGotIt": "Begrepen."
+  "popupInfosButtonGotIt": "Begrepen.",
+  "otherAvaiblePro": "Andere beschikbare professionals",
+  "serviceWithoutCategory": "Niet gecategoriseerd",
+  "recap": "Samenvatting",
+  "popupInfosTitleCancelReservation": "Reservering annuleren? ",
+  "popupInfosTextCancelReservation1": "Weet je zeker dat je de plek wilt vrijmaken?",
+  "popupInfosTextCancelReservation2": "De betaalde aanbetaling wordt definitief door de professional ontvangen.",
+  "popupInfosButtonConfirmCancelReservation": "Ja, annuleren",
+  "popupInfosButtonCancelCancelReservation": "Nee, behouden.",
+  "popupInfosTitleHourChange": "Waarom verandert de tijd?",
+  "popupInfosTextHourChange": "We passen uw planning in realtime aan op basis van de voortgang van de professional in de salon.",
+  "popupInfosTextHourChange2": "Dit bespaart u extra wachttijd op locatie in geval van vertragingen.",
+  "popupInfosListInfosHourChange": "SMS-melding voorafgaand aan uw bezoek."
 }

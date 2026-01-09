@@ -8,6 +8,7 @@ export async function load({ fetch, params }) {
   const resp = await fetch(`${PUBLIC_CARDEN_API}/api/v3/location/${slug}`);
   if (resp.ok) {
     const json = await resp.json();
+
     return formatLocationResponse(json);
   }
   if (resp.status == 404) {

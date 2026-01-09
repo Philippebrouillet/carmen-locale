@@ -164,5 +164,17 @@
   "popupInfosListInfosHours2": "SMS notification before your visit",
   "popupInfosEconomy": "Savings achieved",
   "popupInfosAcompteNote": "In case of no-show, this deposit will be refunded to the professional to compensate for the lost time.",
-  "popupInfosButtonGotIt": "Got it"
+  "popupInfosButtonGotIt": "Got it",
+  "otherAvaiblePro": "Other available professionals",
+  "serviceWithoutCategory": "Uncategorized",
+  "recap": "Summary",
+  "popupInfosTitleCancelReservation": "Reservation cancellation? ",
+  "popupInfosTextCancelReservation1": "Are you sure you want to free up the slot?",
+  "popupInfosTextCancelReservation2": "The deposit paid is definitively acquired by the professional.",
+  "popupInfosButtonConfirmCancelReservation": "Yes, cancel",
+  "popupInfosButtonCancelCancelReservation": "no, keep",
+  "popupInfosTitleHourChange": "Why does the time change?",
+  "popupInfosTextHourChange": "We adjust your schedule in real time according to the professional's progress at the salon.",
+  "popupInfosTextHourChange2": "This saves you additional waiting time on site in case of delays.",
+  "popupInfosListInfosHourChange": "SMS notification before your visit"
 }
