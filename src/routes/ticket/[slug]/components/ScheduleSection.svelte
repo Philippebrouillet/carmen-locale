@@ -2,6 +2,7 @@
   import SuccessIcon from "$lib/assets/icons/SuccessIcon.svelte";
   import { displayWaitingTime } from "$lib/formater";
   import * as m from "$lib/paraglide/messages.js";
+  import type { LocationTheme } from "$src/types/Location";
   import type { PopupType } from "$src/types/PopupInfos";
   import type { TicketPaymentType, TicketStatus } from "$src/types/Ticket";
   import { Bell, Clock3, Dock, InfoIcon, Store, Wallet } from "lucide-svelte";
@@ -13,6 +14,7 @@
   export let ticketStatus: TicketStatus;
   export let popupType: PopupType | null;
   export let isCancelledOrProAbsent: boolean = false;
+  export let theme: LocationTheme;
 
   $: ticketNumber = ticket.details.number;
   $: expectedTime = displayWaitingTime(new Date(ticket.expectedTime));
@@ -58,6 +60,30 @@
     { text: string; icon: typeof Clock3; bg?: string; textColor?: string } | null
   >;
 
+  const bgByTheme: Record<LocationTheme, string> = {
+    NEUTRAL: "bg-primary",
+    PINK: "bg-[#CF95FB]",
+    CARDEN: "bg-[#0073FF]",
+  };
+
+  const borderCardByTheme: Record<LocationTheme, string> = {
+    NEUTRAL: "border-primary",
+    PINK: "border-[#CF95FB]",
+    CARDEN: "border-[#0073FF]",
+  };
+
+  const textColorByTheme: Record<LocationTheme, string> = {
+    NEUTRAL: "text-[#616163]",
+    PINK: "text-[#CF95FB]",
+    CARDEN: "text-[#0073FF]",
+  };
+
+  const bgTicketNumberByTheme: Record<LocationTheme, string> = {
+    NEUTRAL: "bg-[#F7F7F7]",
+    PINK: "bg-[#FFF5FA]",
+    CARDEN: "bg-[#F8FAFD]",
+  };
+
   $: isShowTextStatus =
     ticketStatus === "done" ||
     ticketStatus === "cancelled" ||
@@ -69,19 +95,26 @@
 </script>
 
 <div
-  class="rounded-2xl shadow-sm bg-white overflow-clip w-full border-b-[6px] border-black p-4 md:p-6"
+  class="rounded-2xl shadow-sm bg-white overflow-clip w-full border-b-[6px] {borderCardByTheme[
+    theme
+  ]} p-4 md:p-6"
 >
   <div class="flex justify-between text-secondary-foreground items-center mb-4">
-    <p class="font-bold text-xs px-2 py-1 bg-[#F7F7F7] text-[#616163] rounded-[5px]">
+    <p
+      class="font-bold text-xs px-2 py-1 {bgTicketNumberByTheme[theme]} {textColorByTheme[
+        theme
+      ]} rounded-[5px]"
+    >
       #{ticketNumber}
     </p>
 
+    <!-- Payment Badge -->
     {#if isTicketGeneratedByClient && badgePaymentInfos && !isCancelledOrProAbsent}
       <div
         class="py-1 px-2 rounded-lg flex flex-row gap-1.5 items-center text-white {'bg' in
         badgePaymentInfos
           ? badgePaymentInfos.bg
-          : 'bg-black'}"
+          : bgByTheme[theme]}"
       >
         <svelte:component this={badgePaymentInfos.icon} size="14" />
         <p class="font-bold uppercase text-xs">{badgePaymentInfos.text}</p>
@@ -127,7 +160,7 @@
               ? `${badgeInfosByStatus.bg} `
               : 'bg-[#DFE5E7] bg-opacity-30 '} {'textColor' in badgeInfosByStatus
               ? badgeInfosByStatus.textColor
-              : 'text-[#616163]'}   flex items-center gap-1"
+              : textColorByTheme[theme]}   flex items-center gap-1"
           >
             <svelte:component this={badgeInfosByStatus.icon} size="14" />
 

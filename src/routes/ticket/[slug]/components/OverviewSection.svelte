@@ -43,30 +43,11 @@
 
   //   return totalDurationMinutes;
   // };
+
   console.log("ticketStatus", ticketStatus);
   $: proInfos = proInfosByTicketStatus[ticketStatus];
-  console.log("proInfos", proInfos);
-  // $: queueInfo, (proInfos = proInfosByTicketStatus[ticketStatus]);
   $: isBlackBackground = ticketStatus === "yourTurn" || ticketStatus === "done";
 </script>
-
-<!-- <div class="bg-card border rounded-3xl shadow-xl py-6 px-6 md:py-8 md:px-8 flex flex-col gap-6">
-  <h2 class="font-bold text-left text-xl md:text-2xl">
-    {m.overviewTitle({ name: queueInfo.name })}
-  </h2>
-  <div class="flex flex-row items-center gap-4">
-    <img src={queueInfo.avatar} class="rounded-full w-12 h-12" alt="profile" />
-    <Progress value={ticketProgress}></Progress>
-  </div>
-  <div class="flex flex-row justify-between">
-    <div class="flex flex-col">
-      <p class="font-semibold text-lg">{queuePosition} {m.queueProgress()}</p>
-      <p class="text-sm md:text-md opacity-50">
-        {m.waitInfo({ duration: calculateTotalWait(queueLen) })}
-      </p>
-    </div>
-  </div>
-</div> -->
 
 <div
   class=" {isBlackBackground

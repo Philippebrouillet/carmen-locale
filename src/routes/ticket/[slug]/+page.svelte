@@ -4,7 +4,7 @@
   import { clock } from "$src/lib/stores/clock.svelte";
   import LocationHeader from "$src/routes/[locationSlug]/components/LocationHeader.svelte";
   import { getLocationStatus } from "$src/services/Location";
-  import type { LocationInfoResp, TicketInfo } from "$src/types/Location";
+  import type { LocationInfoResp, LocationTheme, TicketInfo } from "$src/types/Location";
   import { computeQueue } from "$src/services/QueueLine";
   import OverviewSection from "./components/OverviewSection.svelte";
   import ScheduleSection from "./components/ScheduleSection.svelte";
@@ -49,6 +49,7 @@
       }
       return status;
     }
+
     const isLate = Date.now() >= new Date(ticket.expectedTime).getTime() + GRACE_PERIOD_MS;
 
     if (ticket.expectedTime && isLate && data.queuePosition > 0) {
@@ -97,14 +98,11 @@
     if (parsedData.type === "sync") {
       const queueLines = parsedData.queueLines;
       const tickets = queueLines.flatMap((item) => item.tickets);
-      console.log("tickets", tickets);
       const newTicketData = tickets.find((item) => item.id === ticket.id);
       const otherTicketsOnLocation = tickets.filter((item) => {
         const isTicketBeforeMainTicket =
           new Date(item.expectedTime).getTime() < new Date(newTicketData.expectedTime).getTime();
-
         const isSameDayAsToday = new Date(item.startedTime).toDateString() === now.toDateString();
-
         return (
           item.id !== ticket.id &&
           item.locationId === ticket.locationId &&
@@ -211,17 +209,52 @@
     isTicketGeneratedByPro,
     isTicketGeneratedByClient,
     isCancelledOrProAbsent,
+    theme,
+  };
+
+  const mainBgColorByTheme: Record<LocationTheme, string> = {
+    CARDEN: "bg-[#F8FAFD]",
+    NEUTRAL: "bg-[#F8FAFD]",
+    PINK: "bg-gradient-to-b from-[#FAF5FF] via-[#FDF2F8] to-[#FFF1F2]",
+  };
+
+  const backgroundInfosCardByTheme: Record<LocationTheme, string> = {
+    CARDEN: "bg-[#C7E0FF]",
+    NEUTRAL: "bg-[#DFE5E7]",
+    PINK: "bg-[#E5CEF7]",
+  };
+
+  const bgPrimaryActionButtonByTheme: Record<LocationTheme, string> = {
+    CARDEN: "bg-[#0073FF]",
+    NEUTRAL: "bg-primary",
+    PINK: "bg-[#CF95FB]",
+  };
+
+  const borderActionButtonByTheme: Record<LocationTheme, string> = {
+    CARDEN: "border-[#0073FF]",
+    NEUTRAL: "border-primary",
+    PINK: "border-[#CF95FB]",
+  };
+
+  const textSecondaryActionButtonByTheme: Record<LocationTheme, string> = {
+    CARDEN: "text-[#0073FF]",
+    NEUTRAL: "text-primary",
+    PINK: "text-[#CF95FB]",
   };
 </script>
 
-<main class="">
+<main class="{mainBgColorByTheme[theme]} ">
   <LocationHeader {headerCover} {location} {locationStatus} {theme} {fullAddress} />
   <div class="flex flex-row justify-between max-w-screen md:px-8 lg:px-12 xl:px-16 2xl:px-40 gap-8">
     <div
       class="w-full flex flex-col gap-8 md:gap-16 max-w-screen lg:max-w-lg xl:max-w-2xl 2xl:max-w-3xl px-4 mt-4"
     >
       {#if ticketStatus !== "done" && ticketStatus !== "yourTurn" && ticketStatus !== "coming" && ticketStatus !== "youAreNext" && ticketStatus !== "iminent"}
-        <div class="rounded-lg bg-[#DFE5E7] bg-opacity-30 p-4 text-[#616163] text-sm">
+        <div
+          class="rounded-lg {backgroundInfosCardByTheme[
+            theme
+          ]} bg-opacity-30 p-4 text-[#616163] text-sm"
+        >
           {#if showThanksText}
             <p>Réservation confirmée.</p>
             <p>Merci de votre confiance et de votre patience.</p>
@@ -278,7 +311,7 @@
             variant="outline"
             class="border border-primary w-3/4 {disabledDeleteButton
               ? 'bg-[#DFE5E7] cursor-not-allowed border-[#DFE5E7]'
-              : 'bg-primary'}  text-white"
+              : bgPrimaryActionButtonByTheme[theme]}  text-white"
           >
             <!-- {m.cancel()} -->
             Annuler la réservation
@@ -291,8 +324,10 @@
             size="sm"
             variant="outline"
             class=" w-3/4 {ticketStatus !== 'done' && isCancelledOrProAbsent
-              ? ' bg-primary text-white'
-              : 'bg-transparent text-primary'}  border border-primary "
+              ? ` ${bgPrimaryActionButtonByTheme[theme]}  text-white`
+              : `bg-transparent ${textSecondaryActionButtonByTheme[theme]}`} border {borderActionButtonByTheme[
+              theme
+            ]}"
           >
             <!-- {m.cancel()} -->
             Nouvelle réservation
