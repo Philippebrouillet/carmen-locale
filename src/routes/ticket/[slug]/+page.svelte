@@ -213,9 +213,6 @@
   });
 </script>
 
-{ticketStatus}
-{userTicketProgress}
-{nextUserTicketProgress}
 <main class="">
   <LocationHeader {headerCover} {location} {locationStatus} {theme} {fullAddress} />
   <div class="flex flex-row justify-between max-w-screen md:px-8 lg:px-12 xl:px-16 2xl:px-40 gap-8">

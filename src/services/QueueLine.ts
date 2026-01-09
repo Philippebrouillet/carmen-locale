@@ -101,6 +101,18 @@ export function computeQueue(
     return (a.nextAvailable?.next?.getTime() ?? 0) - (b.nextAvailable?.next?.getTime() ?? 0);
   });
 
+  workersQueues.sort((a, b) => {
+    const statusOrder = { available: 0, waiting: 1, unavailable: 2 };
+    const orderA = statusOrder[a.formatedStatus] ?? 3;
+    const orderB = statusOrder[b.formatedStatus] ?? 3;
+
+    if (orderA !== orderB) {
+      return orderA - orderB;
+    }
+
+    return a.name.localeCompare(b.name);
+  });
+
   return workersQueues;
 }
 
