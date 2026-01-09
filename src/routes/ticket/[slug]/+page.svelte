@@ -1,22 +1,13 @@
 <script lang="ts">
   import Footer from "$lib/components/Footer.svelte";
-  import LocationButtons from "$lib/components/LocationButtons.svelte";
   import SideSection from "$lib/components/SideSection.svelte";
-  import SocialButtons from "$lib/components/SocialButtons.svelte";
   import { clock } from "$src/lib/stores/clock.svelte";
   import LocationHeader from "$src/routes/[locationSlug]/components/LocationHeader.svelte";
   import { getLocationStatus } from "$src/services/Location";
   import type { LocationInfoResp, TicketInfo } from "$src/types/Location";
   import { computeQueue } from "$src/services/QueueLine";
-
-  import AddressSection from "./components/AddressSection.svelte";
-  import GiftSection from "./components/GiftSection.svelte";
-  import MessageSection from "./components/MessageSection.svelte";
   import OverviewSection from "./components/OverviewSection.svelte";
   import ScheduleSection from "./components/ScheduleSection.svelte";
-  import SelectionSection from "./components/SelectionSection.svelte";
-  import SmsSection from "./components/SmsSection.svelte";
-  import TicketViewHeader from "./components/TicketViewHeader.svelte";
   import { Button } from "$src/lib/components/ui/button";
   import ExternalLinks from "$src/lib/components/ExternalLinks.svelte";
   import LocationSection from "$src/routes/[locationSlug]/components/LocationSection.svelte";
@@ -32,26 +23,15 @@
 
   export let data;
   $: console.log("data", data);
-  let ticket = data.ticket;
 
   const locationSlug = data.location.location.id;
 
+  let ticket = data.ticket;
   let popupType: PopupType | null = null;
   let showThanksText = false;
-
-  $: location = data.location.location as LocationInfoResp["location"];
-  $: theme = location.theme;
-  $: now = new Date($clock);
-  $: start = new Date(now.getTime() + 5 * 60 * 1000);
-  $: workers = computeQueue(data.location, now, start);
-  $: locationStatus = getLocationStatus(workers);
-  $: headerCover = location.banner ?? "/location-cover.webp";
-  $: fullAddress = `${location.address}, ${location.zipCode}
-        ${location.city}`;
-  $: prestation = ticket.details.prestations[0];
-  $: console.log("ticket ", ticket);
-  $: isTicketGeneratedByClient = ticket.details.eticket;
-  $: isTicketGeneratedByPro = !isTicketGeneratedByClient;
+  let ticketStatus: TicketStatus;
+  let userTicketProgress: number = 0;
+  let nextUserTicketProgress: number = 0;
 
   const evaluateTicketStatus = () => {
     let status: TicketStatus = "coming";
@@ -114,30 +94,6 @@
     return progress;
   };
 
-  let ticketStatus: TicketStatus;
-  $: userTicketProgress,
-    nextUserTicketProgress,
-    data.queuePositio,
-    (ticketStatus = evaluateTicketStatus());
-
-  let userTicketProgress: number = 0;
-  let nextUserTicketProgress: number = 0;
-
-  $: nextTicket = data.queueLen[data.queuePosition - 1];
-  $: $clock,
-    (userTicketProgress = calculateProgressTicket(ticket)),
-    (nextUserTicketProgress = calculateProgressTicket(nextTicket));
-
-  $: disabledDeleteButton = ["yourTurn", "inProgress"].includes(ticketStatus);
-
-  $: scheduleSectionProps = {
-    ticketStatus,
-    ticket,
-    prestation,
-    isTicketGeneratedByPro,
-    isTicketGeneratedByClient,
-  };
-
   const onSyncEvent = (event: MessageEvent) => {
     const parsedData = JSON.parse(event.data);
 
@@ -145,17 +101,23 @@
       const queueLines = parsedData.queueLines;
       const tickets = queueLines.flatMap((item) => item.tickets);
       const newTicketData = tickets.find((item) => item.id === ticket.id);
-      const otherTicketsOnLocation = tickets.filter(
-        (item) =>
+      const otherTicketsOnLocation = tickets.filter((item) => {
+        const isTicketBeforeMainTicket =
+          new Date(item.expectedTime).getTime() < new Date(newTicketData.expectedTime).getTime();
+
+        const isSameDayAsToday = new Date(item.startedTime).toDateString() === now.toDateString();
+
+        return (
           item.id !== ticket.id &&
           item.locationId === ticket.locationId &&
           item.startedTime &&
-          new Date(item.startedTime).toDateString() === now.toDateString() &&
+          isSameDayAsToday &&
+          isTicketBeforeMainTicket &&
           !item.doneTime &&
           !item.canceledTime &&
-          !item.deletedTime &&
-          new Date(item.expectedTime).getTime() < new Date(newTicketData.expectedTime).getTime(),
-      );
+          !item.deletedTime
+        );
+      });
 
       if (newTicketData) {
         ticket = newTicketData;
@@ -211,6 +173,47 @@
       eventSource = null;
     }
   });
+
+  $: location = data.location.location as LocationInfoResp["location"];
+  $: theme = location.theme;
+  $: now = new Date($clock);
+  $: start = new Date(now.getTime() + 5 * 60 * 1000);
+  $: workers = computeQueue(data.location, now, start);
+  $: locationStatus = getLocationStatus(workers);
+  $: headerCover = location.banner ?? "/location-cover.webp";
+  $: fullAddress = `${location.address}, ${location.zipCode}
+        ${location.city}`;
+  $: prestation = ticket.details.prestations[0];
+  $: console.log("ticket ", ticket);
+  $: isTicketGeneratedByClient = ticket.details.eticket;
+  $: isTicketGeneratedByPro = !isTicketGeneratedByClient;
+
+  $: userTicketProgress,
+    nextUserTicketProgress,
+    data.queuePosition,
+    (ticketStatus = evaluateTicketStatus());
+
+  $: nextTicket = data.queueLen[data.queuePosition - 1];
+
+  $: $clock,
+    (userTicketProgress = calculateProgressTicket(ticket)),
+    (nextUserTicketProgress = calculateProgressTicket(nextTicket));
+
+  $: disabledDeleteButton = ["yourTurn", "inProgress"].includes(ticketStatus);
+
+  $: isCancelledOrProAbsent =
+    ticketStatus === "cancelled" ||
+    ticketStatus === "cancelledByPro" ||
+    ticketStatus === "proAbsent";
+
+  $: scheduleSectionProps = {
+    ticketStatus,
+    ticket,
+    prestation,
+    isTicketGeneratedByPro,
+    isTicketGeneratedByClient,
+    isCancelledOrProAbsent,
+  };
 </script>
 
 <main class="">
@@ -236,12 +239,14 @@
           {:else if ticketStatus === "isLate"}
             Une prestation a pris plus de temps que prévu, nous avons ajusté votre horaire de
             passage pour éviter de vous faire attendre sur place.
-            <span class="uppercase text-[#A03203]">NOUVELLE ESTIMATION <span>14:30</span> </span>
+            <p class="uppercase font-bold text-sm text-[#A03203] mt-1">
+              NOUVELLE ESTIMATION <span>14:30</span>
+            </p>
           {/if}
         </div>
       {/if}
 
-      {#if data.queuePosition < 2}
+      {#if data.queuePosition < 2 && !isCancelledOrProAbsent}
         <OverviewSection
           {ticketStatus}
           queueInfo={data.queueInfo}
@@ -262,7 +267,7 @@
       </div>
 
       <div class="flex justify-center flex-col items-center gap-4">
-        {#if !["done", "cancelled", "cancelledByPro", "proAbsent"].includes(ticketStatus)}
+        {#if ticketStatus !== "done" && !isCancelledOrProAbsent}
           <Button
             on:click={(e) => {
               if (disabledDeleteButton) {
@@ -282,18 +287,22 @@
           </Button>
         {/if}
 
-        <Button
-          href="/{locationSlug}"
-          size="sm"
-          variant="outline"
-          class=" w-3/4 bg-transparent  text-primary border border-primary "
-        >
-          <!-- {m.cancel()} -->
-          Nouvelle réservation
-        </Button>
+        {#if ticketStatus !== "isLate"}
+          <Button
+            href="/{locationSlug}"
+            size="sm"
+            variant="outline"
+            class=" w-3/4 {ticketStatus !== 'done' && isCancelledOrProAbsent
+              ? ' bg-primary text-white'
+              : 'bg-transparent text-primary'}  border border-primary "
+          >
+            <!-- {m.cancel()} -->
+            Nouvelle réservation
+          </Button>
+        {/if}
       </div>
 
-      {#if data.queuePosition > 1}
+      {#if data.queuePosition > 1 && !isCancelledOrProAbsent}
         <OverviewSection
           {ticketStatus}
           queueInfo={data.queueInfo}
@@ -302,7 +311,7 @@
       {/if}
 
       <!-- Prestation section -->
-      {#if prestation}
+      {#if prestation && !isCancelledOrProAbsent}
         <div class="bg-white p-4 flex items-center rounded-2xl shadow-sm -mt-2">
           <div class="flex justify-between gap-2 w-full font-bold text-sm text-primary">
             <div class="flex gap-2">

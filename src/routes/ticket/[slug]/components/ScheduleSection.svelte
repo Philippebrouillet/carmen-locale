@@ -12,6 +12,7 @@
   export let prestation;
   export let ticketStatus: TicketStatus;
   export let popupType: PopupType | null;
+  export let isCancelledOrProAbsent: boolean = false;
 
   $: ticketNumber = ticket.details.number;
   $: expectedTime = displayWaitingTime(new Date(ticket.expectedTime));
@@ -28,7 +29,7 @@
       icon: Wallet,
     },
     toPayOnPlace: {
-      text: "À payer sur place",
+      text: "À regler sur place",
       icon: Store,
     },
     paid: {
@@ -75,7 +76,7 @@
       #{ticketNumber}
     </p>
 
-    {#if isTicketGeneratedByClient && badgePaymentInfos}
+    {#if isTicketGeneratedByClient && badgePaymentInfos && !isCancelledOrProAbsent}
       <div
         class="py-1 px-2 rounded-lg flex flex-row gap-1.5 items-center text-white {'bg' in
         badgePaymentInfos
@@ -103,7 +104,7 @@
         <span class=" {isShowTextStatus ? 'text-[2.875rem]' : 'text-6xl'}">
           {#if ticketStatus === "done"}
             Terminé
-          {:else if ticketStatus === "cancelled" || ticketStatus === "cancelledByPro"}
+          {:else if isCancelledOrProAbsent}
             Annulé
           {:else if ticketStatus === "inProgress"}
             En cours
@@ -149,7 +150,7 @@
       {/if}
     </div>
 
-    {#if isTicketGeneratedByClient && ticketStatus !== "yourTurn" && ticketStatus !== "inProgress" && ticketStatus !== "done"}
+    {#if isTicketGeneratedByClient && ticketStatus !== "yourTurn" && ticketStatus !== "inProgress" && ticketStatus !== "done" && !isCancelledOrProAbsent}
       <p class="text-[#616163] text-xs flex items-center gap-1">
         Estimation dynamique liée à l’activité sur place <button
           on:click={() => (popupType = "HOUR_CHANGE")}
