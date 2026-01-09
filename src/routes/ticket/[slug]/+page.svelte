@@ -23,7 +23,7 @@
 
   export let data;
   $: console.log("data", data);
-
+  const GRACE_PERIOD_MS = 5 * 60 * 1000;
   const locationSlug = data.location.location.id;
 
   let ticket = data.ticket;
@@ -49,12 +49,9 @@
       }
       return status;
     }
+    const isLate = Date.now() >= new Date(ticket.expectedTime).getTime() + GRACE_PERIOD_MS;
 
-    if (
-      ticket.expectedTime &&
-      new Date(ticket.expectedTime).getTime() < now.getTime() &&
-      data.queuePosition > 0
-    ) {
+    if (ticket.expectedTime && isLate && data.queuePosition > 0) {
       status = "isLate";
       return status;
     }
@@ -100,6 +97,7 @@
     if (parsedData.type === "sync") {
       const queueLines = parsedData.queueLines;
       const tickets = queueLines.flatMap((item) => item.tickets);
+      console.log("tickets", tickets);
       const newTicketData = tickets.find((item) => item.id === ticket.id);
       const otherTicketsOnLocation = tickets.filter((item) => {
         const isTicketBeforeMainTicket =
