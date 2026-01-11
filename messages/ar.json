@@ -176,5 +176,13 @@
   "popupInfosTitleHourChange": "لماذا يتغير الوقت؟",
   "popupInfosTextHourChange": "نقوم بتعديل جدولك الزمني في الوقت الفعلي وفقًا لتقدم المحترف في الصالون.",
   "popupInfosTextHourChange2": "هذا يوفر عليك وقت انتظار إضافي في الموقع في حالة حدوث تأخيرات.",
-  "popupInfosListInfosHourChange": "إشعار عبر الرسائل النصية القصيرة قبل زيارتك"
+  "popupInfosListInfosHourChange": "إشعار عبر الرسائل النصية القصيرة قبل زيارتك",
+  "day": "يوم",
+  "days": "أيام",
+  "hour": "ساعة",
+  "hours": "ساعات",
+  "minute": "دقيقة",
+  "minutes": "دقائق",
+  "lessThan5Minutes": "أقل من 5 دقائق",
+  "noAvailableProfessionalsMessage": "معذرةً، ليس لدينا أي اقتراحات بشأن الفترة الزمنية التي تفضلها..."
 }

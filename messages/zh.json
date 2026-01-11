@@ -176,5 +176,13 @@
   "popupInfosTitleHourChange": "为什么时间会改变？",
   "popupInfosTextHourChange": "我们会根据沙龙专业人员的工作进度实时调整您的日程安排。",
   "popupInfosTextHourChange2": "这样可以避免因延误而造成的现场额外等待时间。",
-  "popupInfosListInfosHourChange": "到访前短信通知"
+  "popupInfosListInfosHourChange": "到访前短信通知",
+  "day": "天",
+  "days": "天",
+  "hour": "小时",
+  "hours": "小时",
+  "minute": "分钟",
+  "minutes": "分钟",
+  "lessThan5Minutes": "不到5分钟",
+  "noAvailableProfessionalsMessage": "抱歉，我们没有您首选时间段的建议……"
 }

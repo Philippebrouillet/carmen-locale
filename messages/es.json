@@ -176,5 +176,13 @@
   "popupInfosTitleHourChange": "¿Por qué cambia la hora?",
   "popupInfosTextHourChange": "Ajustamos tu agenda en tiempo real según el progreso del profesional en el salón.",
   "popupInfosTextHourChange2": "Esto le ahorra tiempo de espera adicional en el sitio en caso de retrasos.",
-  "popupInfosListInfosHourChange": "Notificación por SMS antes de tu visita"
+  "popupInfosListInfosHourChange": "Notificación por SMS antes de tu visita",
+  "day": "día",
+  "days": "días",
+  "hour": "hora",
+  "hours": "horas",
+  "minute": "minuto",
+  "minutes": "minutos",
+  "lessThan5Minutes": "menos de 5 minutos",
+  "noAvailableProfessionalsMessage": "Lo sentimos, no tenemos ninguna sugerencia para tu franja horaria preferida…"
 }

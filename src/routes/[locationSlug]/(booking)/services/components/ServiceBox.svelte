@@ -17,7 +17,12 @@
     CARDEN: "bg-[#F8FAFD]",
   };
 
-  let isOpenFullDescription = ["Nouveau", "Événement", "Combo"].includes(service.tag);
+  let isOpenFullDescription = ["nouveau", "evenement", "combo"].includes(
+    service.tag
+      ?.toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, ""),
+  );
 </script>
 
 <a

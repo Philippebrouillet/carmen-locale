@@ -16,6 +16,7 @@
   import Lightning from "$src/lib/assets/icons/Lightning.svelte";
   import { ChevronDown } from "lucide-svelte";
   import BadgeTarifMode from "$src/lib/components/BadgeTarifMode.svelte";
+  import { backgroundColorByTheme } from "$src/services/Location";
 
   type BookingMode = "ASAP" | "AFTER" | "3HOURS";
 
@@ -57,6 +58,7 @@
   onMount(() => {
     if (["AFTER", "3HOURS"].includes(bookingMode)) {
       setBookingDelay(Number(bookingDelays[0]));
+      // setBookingDelay(500);
     }
 
     if (filterWorkerId) {
@@ -92,17 +94,19 @@
   //   (w) => !["DISABLED", "STOPED"].includes(w.status),
   // );
 
-  $: workers = computeQueue($location, new Date($clock), start).filter((w) => {
-    const haveTicketInConflict = w.tickets.find((t) => {
-      if (!t.rdvTime || !t.durationS) return false;
-      const end = t.rdvTime.getTime() + t.durationS * 1000;
-      return start.getTime() > t.rdvTime.getTime() && start.getTime() < end;
+  const filterShowableWorkers = (workers, date) => {
+    return workers.filter((w) => {
+      const haveTicketInConflict = w.tickets.find((t) => {
+        if (!t.rdvTime || !t.durationS) return false;
+        const end = t.rdvTime.getTime() + t.durationS * 1000;
+        return date.getTime() > t.rdvTime.getTime() && date.getTime() < end;
+      });
+
+      return w.formatedStatus !== "unavailable" && !haveTicketInConflict;
     });
+  };
 
-    return w.formatedStatus !== "unavailable" && !haveTicketInConflict;
-  });
-
-  $: console.log("workers", workers);
+  $: workers = filterShowableWorkers(computeQueue($location, new Date($clock), start), start);
 
   $: if (appointmentOptionSelected == false) {
     setBookingDate(today(getLocalTimeZone()).toDate(getLocalTimeZone()));
@@ -118,6 +122,8 @@
   //   console.log(locationPlanning);
   //   console.log("Selected date : ", selectedDay);
   // }
+
+  $: bookingDelayBg = backgroundColorByTheme[$location.location.theme];
 </script>
 
 <main class="w-full flex flex-col items-center md:items-start px-4">
@@ -146,8 +152,8 @@
               }}
               class="flex gap-2 justify-between p-3 border rounded-xl transition-all duration-200 ease-in-out font-bold h-[69px] {bookingDelay ==
               delay
-                ? 'bg-primary text-primary-foreground '
-                : 'bg-white hover:bg-gray-100'} "
+                ? `${bookingDelayBg} text-primary-foreground `
+                : 'bg-white hover:bg-gray-100'}  "
             >
               {numberDelay >= 60
                 ? `${Math.floor(numberDelay / 60)}h${numberDelay % 60 > 0 ? `${numberDelay % 60}` : ""}`
@@ -226,44 +232,49 @@
     <div class="flex items-center justify-center w-full">
       <BadgeTarifMode />
     </div>
-    <div class="flex flex-col gap-4 w-full overflow-hidden">
-      {#if filterWorkerId}
-        <!-- SELECTED WORKER  -->
-        {#each selectedWorker as w, i}
-          <Worker
-            bind:selectedWorkerId
-            bind:selectedSlotTime
-            worker={w}
-            showInfo={appointmentOptionSelected}
-            isFree={w.nextAvailable?.isFirstSlot &&
-              !(appointmentOptionSelected && w.nextAvailable?.createHole)}
-            index={i}
-          />
-        {/each}
-        {#if otherWorkers.length && selectedWorker.length}
-          <div class="mb-2 mt-4">
-            <h2 class="text-lg font-bold">{m.otherAvaiblePro()}</h2>
-          </div>
-        {/if}
-      {/if}
 
-      {#if otherWorkers.length}
-        <!-- OTHER WORKERS  -->
-        {#key selectedTime}
-          {#key bookingDelay}
-            {#each otherWorkers as w, i}
-              <Worker
-                bind:selectedWorkerId
-                bind:selectedSlotTime
-                worker={w}
-                showInfo={appointmentOptionSelected}
-                index={i}
-                isFree={false}
-              />
-            {/each}
+    {#if selectedWorker.length || otherWorkers.length}
+      <div class="flex flex-col gap-4 w-full overflow-hidden">
+        {#if filterWorkerId}
+          <!-- SELECTED WORKER  -->
+          {#each selectedWorker as w, i}
+            <Worker
+              bind:selectedWorkerId
+              bind:selectedSlotTime
+              worker={w}
+              showInfo={appointmentOptionSelected}
+              isFree={w.nextAvailable?.isFirstSlot &&
+                !(appointmentOptionSelected && w.nextAvailable?.createHole)}
+              index={i}
+            />
+          {/each}
+          {#if otherWorkers.length && selectedWorker.length}
+            <div class="mb-2 mt-4">
+              <h2 class="text-lg font-bold">{m.otherAvaiblePro()}</h2>
+            </div>
+          {/if}
+        {/if}
+
+        {#if otherWorkers.length}
+          <!-- OTHER WORKERS  -->
+          {#key selectedTime}
+            {#key bookingDelay}
+              {#each otherWorkers as w, i}
+                <Worker
+                  bind:selectedWorkerId
+                  bind:selectedSlotTime
+                  worker={w}
+                  showInfo={appointmentOptionSelected}
+                  index={i}
+                  isFree={false}
+                />
+              {/each}
+            {/key}
           {/key}
-        {/key}
-      {/if}
-    </div>
+        {/if}
+      </div>
+    {:else}
+      {m.noAvailableProfessionalsMessage()}
+    {/if}
   </div>
 </main>

@@ -176,5 +176,13 @@
   "popupInfosTitleHourChange": "Why does the time change?",
   "popupInfosTextHourChange": "We adjust your schedule in real time according to the professional's progress at the salon.",
   "popupInfosTextHourChange2": "This saves you additional waiting time on site in case of delays.",
-  "popupInfosListInfosHourChange": "SMS notification before your visit"
+  "popupInfosListInfosHourChange": "SMS notification before your visit",
+  "day": "day",
+  "days": "days",
+  "hour": "hour",
+  "hours": "hours",
+  "minute": "minute",
+  "minutes": "minutes",
+  "lessThan5Minutes": "less than 5 minutes",
+  "noAvailableProfessionalsMessage": "Sorry, we don't have any suggestions for your preferred time slot…"
 }

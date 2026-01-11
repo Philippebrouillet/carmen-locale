@@ -3,7 +3,7 @@
   import SideSection from "$lib/components/SideSection.svelte";
   import { clock } from "$src/lib/stores/clock.svelte";
   import LocationHeader from "$src/routes/[locationSlug]/components/LocationHeader.svelte";
-  import { getLocationStatus } from "$src/services/Location";
+  import { getLocationStatus, mainBackgroundColorByTheme } from "$src/services/Location";
   import type { LocationInfoResp, LocationTheme, TicketInfo } from "$src/types/Location";
   import { computeQueue } from "$src/services/QueueLine";
   import OverviewSection from "./components/OverviewSection.svelte";
@@ -65,10 +65,17 @@
         status = "youAreNext";
       }
     } else if (data.queuePosition === 0) {
-      if (userTicketProgress > 0 && ticket.startedTime) {
+      const expected = new Date(ticket.expectedTime).getTime();
+      const now = Date.now();
+      const isTicketTurn = now >= expected - 5 * 60 * 1000;
+
+      if (ticket.startedTime) {
         status = "inProgress";
-      } else {
+        // 5 minutes before expected time
+      } else if (isTicketTurn) {
         status = "yourTurn";
+      } else {
+        status = "coming";
       }
     }
 
@@ -96,6 +103,7 @@
     const parsedData = JSON.parse(event.data);
 
     if (parsedData.type === "sync") {
+      console.log("parsedData", parsedData);
       const queueLines = parsedData.queueLines;
       const tickets = queueLines.flatMap((item) => item.tickets);
       const newTicketData = tickets.find((item) => item.id === ticket.id);
@@ -103,7 +111,9 @@
         const isTicketBeforeMainTicket =
           new Date(item.expectedTime).getTime() < new Date(newTicketData.expectedTime).getTime();
         const isSameDayAsToday = new Date(item.startedTime).toDateString() === now.toDateString();
+
         return (
+          item.doctorId === ticket.doctorId &&
           item.id !== ticket.id &&
           item.locationId === ticket.locationId &&
           item.startedTime &&
@@ -119,7 +129,7 @@
         ticket = newTicketData;
         ticket = ticket;
       }
-
+      console.log("otherTicketsOnLocation", otherTicketsOnLocation);
       if (otherTicketsOnLocation.length) {
         const newQueueLen = [];
 
@@ -139,6 +149,7 @@
       } else {
         data.queueLen = [];
         data.queuePosition = 0;
+        data.data = data;
       }
     }
   };

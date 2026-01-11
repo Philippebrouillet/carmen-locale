@@ -176,5 +176,13 @@
   "popupInfosTitleHourChange": "समय क्यों बदलता है?",
   "popupInfosTextHourChange": "हम सैलून में पेशेवर की प्रगति के अनुसार आपके शेड्यूल को वास्तविक समय में समायोजित करते हैं।",
   "popupInfosTextHourChange2": "इससे देरी होने की स्थिति में आपको घटनास्थल पर अतिरिक्त प्रतीक्षा समय की बचत होती है।",
-  "popupInfosListInfosHourChange": "आपकी यात्रा से पहले एसएमएस सूचना"
+  "popupInfosListInfosHourChange": "आपकी यात्रा से पहले एसएमएस सूचना",
+  "day": "दिन",
+  "days": "दिन",
+  "hour": "घंटा",
+  "hours": "घंटे",
+  "minute": "मिनट",
+  "minutes": "मिनट",
+  "lessThan5Minutes": "5 मिनट से भी कम",
+  "noAvailableProfessionalsMessage": "क्षमा करें, आपके पसंदीदा समय के लिए हमारे पास कोई सुझाव नहीं है…"
 }

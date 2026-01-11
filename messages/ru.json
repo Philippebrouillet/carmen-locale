@@ -176,5 +176,13 @@
   "popupInfosTitleHourChange": "Почему меняется время?",
   "popupInfosTextHourChange": "Мы корректируем ваше расписание в режиме реального времени в зависимости от хода работы специалиста в салоне.",
   "popupInfosTextHourChange2": "Это позволит вам сэкономить дополнительное время ожидания на месте в случае задержек.",
-  "popupInfosListInfosHourChange": "SMS-уведомление перед вашим визитом"
+  "popupInfosListInfosHourChange": "SMS-уведомление перед вашим визитом",
+  "day": "день",
+  "days": "дни",
+  "hour": "час",
+  "hours": "часы",
+  "minute": "минута",
+  "minutes": "минут",
+  "lessThan5Minutes": "менее 5 минут",
+  "noAvailableProfessionalsMessage": "К сожалению, у нас нет предложений по удобному для вас времени…"
 }

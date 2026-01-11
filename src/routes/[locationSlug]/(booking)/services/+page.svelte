@@ -139,9 +139,7 @@
     {/each}
 
     {#if servicesWithoutCategory.length > 0}
-      <div class="mt-6">
-        <h2 class="col-span-full font-bold text-primary mb-4">{m.serviceWithoutCategory()}</h2>
-
+      <div class="mt-6 border-t pt-6">
         <div
           class="grid grid-cols-1 md:grid-cols-2 w-full gap-4 justify-center md:justify-start mb-8"
         >

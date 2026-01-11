@@ -3,13 +3,14 @@
 
   import * as m from "$lib/paraglide/messages.js";
   import type { ServiceInfo, WorkerInfo } from "$src/types/Location";
+  import type { PopupType } from "$src/types/PopupInfos";
   import { InfoIcon } from "lucide-svelte";
 
   import { fly } from "svelte/transition";
 
   export let selectedProfessional: WorkerInfo | null;
   export let selectedService: ServiceInfo | null;
-  export let openPopupInfo: (type: string) => void;
+  export let openPopupInfo: (type: PopupType) => void;
 </script>
 
 <div class="flex flex-row justify-between">

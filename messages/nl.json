@@ -176,5 +176,13 @@
   "popupInfosTitleHourChange": "Waarom verandert de tijd?",
   "popupInfosTextHourChange": "We passen uw planning in realtime aan op basis van de voortgang van de professional in de salon.",
   "popupInfosTextHourChange2": "Dit bespaart u extra wachttijd op locatie in geval van vertragingen.",
-  "popupInfosListInfosHourChange": "SMS-melding voorafgaand aan uw bezoek."
+  "popupInfosListInfosHourChange": "SMS-melding voorafgaand aan uw bezoek.",
+  "day": "dag",
+  "days": "dagen",
+  "hour": "uur",
+  "hours": "uren",
+  "minute": "minuut",
+  "minutes": "notulen",
+  "lessThan5Minutes": "minder dan 5 minuten",
+  "noAvailableProfessionalsMessage": "Sorry, we hebben geen suggesties voor uw gewenste tijdslot…"
 }

@@ -1,5 +1,6 @@
 <script lang="ts">
   import * as m from "$lib/paraglide/messages.js";
+  import type { LocationStatus, LocationTheme } from "$src/types/Location";
   import type { TicketStatus } from "$src/types/Ticket";
 
   export let queuePosition;
@@ -44,6 +45,9 @@
   //   return totalDurationMinutes;
   // };
 
+  //   const badgePaymentBgByTheme: Record<LocationTheme, string> = {
+  // 'NEUTRAL':'bg-primary'
+  //   };
   console.log("ticketStatus", ticketStatus);
   $: proInfos = proInfosByTicketStatus[ticketStatus];
   $: isBlackBackground = ticketStatus === "yourTurn" || ticketStatus === "done";
@@ -105,7 +109,7 @@
         {/if}
       </div>
 
-      {#if ticketProgress}
+      {#if ticketProgress > -1}
         <div class="h-4 w-full rounded-[6px] bg-[#DFE5E7] overflow-hidden">
           <div class="h-4 bg-[#616163]" style="width: {ticketProgress}%"></div>
         </div>

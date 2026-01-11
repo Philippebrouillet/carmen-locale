@@ -176,5 +176,13 @@
   "popupInfosTitleHourChange": "Pourquoi l’heure change ?",
   "popupInfosTextHourChange": "Nous ajustons votre horaire en temps réel selon l’avancement du professionnel au salon.",
   "popupInfosTextHourChange2": "Cela vous évite l’attente supplémentaire sur place en cas de retard.",
-  "popupInfosListInfosHourChange": "Notification SMS avant votre passage"
+  "popupInfosListInfosHourChange": "Notification SMS avant votre passage",
+  "day": "jour",
+  "days": "jours",
+  "hour": "heure",
+  "hours": "heures",
+  "minute": "minute",
+  "minutes": "minutes",
+  "lessThan5Minutes": "moins de 5 minutes",
+  "noAvailableProfessionalsMessage": "Désolé nous n’avons de proposition pour vos préférences d’horaire…"
 }
