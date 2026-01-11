@@ -118,7 +118,7 @@
           item.locationId === ticket.locationId &&
           // item.startedTime &&
           isSameDayAsToday &&
-          isTicketBeforeMainTicket &&
+          // isTicketBeforeMainTicket &&
           !item.doneTime &&
           !item.canceledTime &&
           !item.deletedTime
