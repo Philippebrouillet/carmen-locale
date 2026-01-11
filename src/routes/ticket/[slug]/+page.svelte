@@ -116,7 +116,7 @@
           item.doctorId === ticket.doctorId &&
           item.id !== ticket.id &&
           item.locationId === ticket.locationId &&
-          item.startedTime &&
+          // item.startedTime &&
           isSameDayAsToday &&
           isTicketBeforeMainTicket &&
           !item.doneTime &&
