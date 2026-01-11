@@ -107,10 +107,17 @@
       const queueLines = parsedData.queueLines;
       const tickets = queueLines.flatMap((item) => item.tickets);
       const newTicketData = tickets.find((item) => item.id === ticket.id);
+
+      const now = new Date();
+
       const otherTicketsOnLocation = tickets.filter((item) => {
         const isTicketBeforeMainTicket =
           new Date(item.expectedTime).getTime() < new Date(newTicketData.expectedTime).getTime();
-        const isSameDayAsToday = new Date(item.startedTime).toDateString() === now.toDateString();
+        const creationDate = new Date(item.creationTime);
+        const isSameDayAsToday =
+          creationDate.getFullYear() === now.getFullYear() &&
+          creationDate.getMonth() === now.getMonth() &&
+          creationDate.getDate() === now.getDate();
 
         return (
           item.doctorId === ticket.doctorId &&
