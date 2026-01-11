@@ -208,8 +208,6 @@
   //   : ($shopStore.selectedService?.price || 0) + ($shopStore.cardenFee || 0);
 </script>
 
-{info.next.toISOString()}
-{$shopStore.bookingDate?.toISOString()}
 <div
   class="flex flex-col p-4 pt-4 lg:p-8 gap-6 w-full overflow-y-auto max-h-screen md:h-[80vh] bg-[#F8FAFD]"
 >
