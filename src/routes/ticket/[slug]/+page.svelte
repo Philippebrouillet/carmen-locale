@@ -110,14 +110,14 @@
       const otherTicketsOnLocation = tickets.filter((item) => {
         const isTicketBeforeMainTicket =
           new Date(item.expectedTime).getTime() < new Date(newTicketData.expectedTime).getTime();
-        // const isSameDayAsToday = new Date(item.startedTime).toDateString() === now.toDateString();
+        const isSameDayAsToday = new Date(item.startedTime).toDateString() === now.toDateString();
 
         return (
           item.doctorId === ticket.doctorId &&
           item.id !== ticket.id &&
           item.locationId === ticket.locationId &&
           // item.startedTime &&
-          // isSameDayAsToday &&
+          isSameDayAsToday &&
           isTicketBeforeMainTicket &&
           !item.doneTime &&
           !item.canceledTime &&
