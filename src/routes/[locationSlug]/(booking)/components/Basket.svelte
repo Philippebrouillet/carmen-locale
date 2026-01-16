@@ -113,8 +113,6 @@
     (finalPriceToPay = calculateFinalPrice());
 </script>
 
-{finalPriceToPay}
-{paymentMode}
 {#if selectedService && selectedProfessional}
   <div class="flex">
     <div

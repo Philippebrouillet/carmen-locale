@@ -34,20 +34,34 @@
 
   // const slotsTimes = setBookingType(data.mode == "appointment" ? "appointment" : "waitlist");
 
-  const createSlotDate = (start: number, end: number) => {
+  const parseTimeString = (time: string): { hour: number; minutes: number } => {
+    const [hourStr, minuteStr] = time.split(":");
+    return { hour: parseInt(hourStr, 10), minutes: parseInt(minuteStr || "0", 10) };
+  };
+
+  const createSlotDate = (start: string, end: string): Date[] => {
     const slots: Date[] = [];
-    for (let hour = start; hour < end; hour++) {
+    const { hour: startHour, minutes: startMinutes } = parseTimeString(start);
+    const { hour: endHour, minutes: endMinutes } = parseTimeString(end);
+
+    for (let hour = startHour; hour <= endHour; hour++) {
       for (let minutes of [0, 30]) {
+        // Commence à l'heure de départ
+        if (hour === startHour && minutes < startMinutes) continue;
+        // Arrête à l'heure de fin
+        if (hour === endHour && minutes > endMinutes) break;
+
         const date = new Date();
         date.setHours(hour, minutes, 0, 0);
         slots.push(date);
       }
     }
+
     return slots;
   };
 
-  const morningSlots: Date[] = createSlotDate(8, 12);
-  const afternoonSlots: Date[] = createSlotDate(12, 19);
+  const morningSlots = createSlotDate("8:00", "12:00");
+  const afternoonSlots = createSlotDate("12:00", "19:00");
 
   // const formatter = new Intl.DateTimeFormat(languageTag(), {
   //   day: "numeric",
