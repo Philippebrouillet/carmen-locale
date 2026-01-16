@@ -21,11 +21,17 @@
 
   import { CardCvc, CardExpiry, CardNumber, Elements } from "svelte-stripe";
 
-  import { loadStripe, type Stripe, type StripeElementBase } from "@stripe/stripe-js";
+  import {
+    loadStripe,
+    type Stripe,
+    type StripeCardNumberElement,
+    type StripeElementBase,
+  } from "@stripe/stripe-js";
 
   import { onMount } from "svelte";
+  import type { PaymentMethod } from "$src/types/Location";
 
-  export let paymentMethod: "credit-card" | "in-store";
+  export let paymentMethod: PaymentMethod;
   export let finalPriceToPay: number;
 
   let cardElement: StripeElementBase | undefined = undefined;
@@ -44,9 +50,12 @@
   // let firstInfo = nextAvailableTime(workerTickets, now, firstStart);
   // let firstIsFree = firstInfo.isFirstSlot && !(rdv != null && firstInfo.createHole);
   let userExist: boolean | null = null;
-  let userName: string;
-  let phone: E164Number | null = "";
-  let email: string;
+
+  let formData: { name: string; phone: E164Number | null; email: string } = {
+    name: "",
+    phone: "",
+    email: "",
+  };
   let phoneValid = true;
   let selectedCountry: CountryCode = "FR";
   let isCreatingTicket = false;
@@ -66,15 +75,37 @@
     return await response.json();
   }
 
-  async function pay() {
-    if (!stripe || !cardElement) {
+  async function pay(clientSecret: { id: string }) {
+    if (!stripe || !cardElement || !clientSecret) {
       console.error("Stripe.js has not loaded yet.");
       return;
     }
 
-    if (!cardElement) {
-      console.error("Card element not found.");
-      return;
+    const { paymentMethod, error } = await stripe.createPaymentMethod({
+      type: "card",
+      card: cardElement as StripeCardNumberElement,
+    });
+
+    console.log("cardElement", cardElement);
+    console.log("clientSecret", clientSecret);
+    console.log("paymentMethod", paymentMethod);
+
+    if (paymentMethod) {
+      const response = await fetch(`${PUBLIC_CARDEN_API}/api/v4/stripe/test/pay`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          paymentIntentId: clientSecret.id,
+          paymentMethodId: paymentMethod.id,
+        }),
+      });
+
+      const result = await response.json();
+
+      console.log("Payment result:", result);
     }
 
     // const paymentRequest: PaymentRequestOptions = {
@@ -86,29 +117,16 @@
     // };
     // const clientSecret = await createPaymentIntent();
 
-    const result = await stripe.confirmCardPayment(clientSecret, {
-      payment_method: {
-        card: cardElement,
-        billing_details: {
-          name: userName,
-          email: email,
-          phone: phone,
-        },
-      },
-    });
-
-    if (result.error) {
-      // Show error to your customer (e.g., insufficient funds)
-      console.error(result.error.message);
-      return false;
-    } else {
-      // The payment has been processed!
-      if (result.paymentIntent && result.paymentIntent.status === "succeeded") {
-        // Show a success message to your customer
-        console.log("Payment succeeded!");
-        return true;
-      }
-    }
+    // const result = await stripe.confirmCardPayment(clientSecret, {
+    //   payment_method: {
+    //     card: cardElement,
+    //     billing_details: {
+    //       name: userName,
+    //       email: email,
+    //       phone: phone,
+    //     },
+    //   },
+    // });
   }
 
   async function handleSubmit() {
@@ -122,12 +140,12 @@
       return;
     }
 
-    if (userName == null) {
+    if (formData.name == null) {
       console.error("userName not defined");
       return;
     }
 
-    if (phone == null) {
+    if (formData.phone == null) {
       console.error("phone not defined");
       return;
     }
@@ -151,13 +169,13 @@
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          ...formData,
           locationId: $location.location.id,
           queueId: workerId,
-          name: userName,
-          phone: phone,
           services: [servicesId],
           expectedTime: $shopStore.bookingDate?.toISOString() || info.next.toISOString(),
           eticket: true,
+          ticketOrigin: "WEB",
         }),
       });
       isCreatingTicket = false;
@@ -167,6 +185,8 @@
 
         if (paymentMethod === "credit-card" && stripe) {
           const clientSecret = await createPaymentIntent(body.payload.id);
+
+          const paymentResult = await pay(clientSecret);
 
           // await confirmCardPayment(clientSecret)
           // const isPaid = await pay();
@@ -188,6 +208,24 @@
       const stripeKey = PUBLIC_STRIPE_KEY;
       if (stripeKey) {
         stripe = await loadStripe(stripeKey);
+        //   if (stripe) {
+        //     // 2️⃣ créer PaymentRequest pour Apple Pay
+        //     const paymentRequest = stripe.paymentRequest({
+        //       country: "US",
+        //       currency: "usd",
+        //       total: { label: "Total", amount: 0 }, // amount=0 car Stripe prendra PaymentIntent amount
+        //       requestPayerName: true,
+        //       requestPayerEmail: true,
+        //     });
+
+        //     const canPay = await paymentRequest.canMakePayment();
+        //     if (!canPay) return;
+
+        //     const elements = stripe.elements();
+        //     const prButton = elements.create("paymentRequestButton", { paymentRequest });
+        //     prButton.mount("#apple-pay-button");
+        //   }
+        // }
       }
     }
   });
@@ -196,7 +234,7 @@
   // $: locationPayUrl = setParam($page.url, 'carden', false.toString());
   // $: cardenPayUrl = setParam($page.url, 'carden', true.toString());
   $: {
-    if (userExist == null && phone != null && phone.length == 10) {
+    if (userExist == null && formData.phone != null && formData.phone.length == 10) {
       // checkClient(phone).catch((err) => { console.error(err); userExist = false; });
     }
   }
@@ -222,23 +260,29 @@
   <form class="flex flex-col gap-6 h-fit md:h-fit py-6" on:submit|preventDefault={handleSubmit}>
     <div class="flex flex-col gap-3 w-full">
       <div class=" w-full">
-        <FormInput label={""} placeholder="John" id="first-name" bind:value={userName} />
+        <FormInput label={""} placeholder="John" id="first-name" bind:value={formData.name} />
       </div>
       <div class=" flex flex-col gap-1">
         <label for="phone" class="text-xs text-gray-400 font-bold uppercase">{m.phone()}</label>
         <PhoneInput
-          bind:value={phone}
+          bind:value={formData.phone}
           bind:valid={phoneValid}
           bind:selectedCountry
           options={{ format: "national" }}
         />
       </div>
 
-      <FormInput label={m.email()} placeholder="example@mail.com" id="email" bind:value={email} />
+      <FormInput
+        label={m.email()}
+        placeholder="example@mail.com"
+        id="email"
+        bind:value={formData.email}
+      />
     </div>
     {#if stripe}
       <Elements {stripe}>
         {#if paymentMethod === "credit-card"}
+          <!-- <div id="apple-pay-button"></div> -->
           <div class=" bg-white py-3 px-2 rounded-lg">
             <CardNumber bind:element={cardElement} />
           </div>

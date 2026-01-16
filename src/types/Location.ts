@@ -3,44 +3,11 @@ import type { WorkerStatus } from "./QueueLine";
 export type LocationTheme = "NEUTRAL" | "PINK" | "CARDEN";
 export type LocationStatus = "open" | "full" | "closed";
 
-// export type LocationInfo = {
-//   id: number;
-//   slug: string;
-//   name: string;
-//   avatar: string | null;
-//   banner: string | null;
-//   address: string;
-//   zipCode: string;
-//   city: string;
-//   theme: LocationTheme;
-//   config: { condition: []; hiddenFee: boolean };
-//   externalCalendarIntegration: any;
-//   externalCalendarIntegrationAuthorized: boolean;
-//   externalCalendarLink: string;
-//   fee: number;
-//   instagramLink: string;
-//   onlineShopLink: string;
-//   overpriceExternalCalendar: any;
-//   tarifMode: string;
-//   tiktokLink: string;
-//   website: string;
-// };
-
-// export type LocationInfoResp = {
-//   location: LocationInfo;
-//   services: ServiceInfo[];
-//   workers: WorkerInfo[];
-//   tickets: TicketInfo[];
-//   planning: Planning[];
-// };
-
-// export type WorkerInfo = {
-//   id: number;
-//   name: string;
-//   avatar: string | null;
-//   status: WorkerStatus;
-//   planning: Planning[];
-// };
+export type LocationPaymentMode =
+  | "ONLINE_UPFRONT_FEE"
+  | "ONLINE_FULL"
+  | "ONSITE_FULL"
+  | "CLIENT_CHOICE";
 
 export type Planning = {
   workerId: number;
@@ -49,25 +16,6 @@ export type Planning = {
   endTime: number; // timestamp in seconds
   enabled: boolean;
 };
-
-// export type ServiceInfo = {
-//   id: number;
-//   name: string;
-//   price: number;
-//   durationS: number;
-//   image: string | null;
-// };
-
-// export type TicketInfo = {
-//   id: number;
-//   workerId: number | null;
-//   durationS: number;
-//   canceledTime: Date | null;
-//   doneTime: Date | null;
-//   rdvTime: Date | null;
-//   startedTime: Date | null;
-//   details: any | null;
-// };
 
 export type TicketInfoWithTime = {
   id: number;
@@ -186,11 +134,46 @@ export type ServiceInfo = {
   status: "DISABLED" | "ENABLED";
   tag: string;
 };
+export type BookingMode = "3H" | "DAY" | "ASAP";
+export type LocationConfig = {
+  client_cancel_refund_mode: "NONE" | "PARTIAL" | "COMPLETE";
+  cut_on_overcharge: number;
+  cut_on_overcharge_mode: "CONSTANT" | "VARIABLE";
+  location_id: number;
+  minimum_service_fee: number;
+  booking_window: BookingMode;
+  partial_refund_percent: number;
+  payment_mode: LocationPaymentMode;
+  pro_cancel_refund_mode: "NONE" | "PARTIAL" | "COMPLETE";
+  service_fee: number;
+  service_fee_included_in_overcharge: boolean;
+  service_fee_mode: "CONSTANT" | "VARIABLE";
+  show_refund_button: boolean;
+  stripe_connect_enabled: boolean;
+  upfront_fee_eur: number;
+  upfront_fee_mode: "CONSTANT" | "VARIABLE";
+  upfront_fee_percent: number;
+  use_web_config_for_mobile: boolean;
+  carden_spotlight_enabled: boolean;
+  google_place_id: string | null;
+  media_image_enabled: boolean;
+  satisfaction_survey: "DEFAULT" | "CUSTOM";
+  satisfaction_survey_link: string | null;
+  service_fee_eur: number;
+  service_fee_percent: number;
+  sms_enabled: boolean;
+  stripe_enabled: boolean;
+  youtube_video_on_ticket_enabled: boolean;
+  youtube_video_url: string | null;
+};
 
 export type LocationInfoResp = {
   location: LocationInfo;
   workers: WorkerInfo[];
   services: ServiceInfo[];
   planning: Planning[];
+  config: LocationConfig;
 };
 export type FormatedProStatus = "available" | "waiting" | "unavailable";
+
+export type PaymentMethod = "credit-card" | "in-store";

@@ -17,8 +17,7 @@
   import { ChevronDown } from "lucide-svelte";
   import BadgeTarifMode from "$src/lib/components/BadgeTarifMode.svelte";
   import { backgroundColorByTheme } from "$src/services/Location";
-
-  type BookingMode = "ASAP" | "AFTER" | "3HOURS";
+  import type { BookingMode } from "$src/types/Location";
 
   export let data;
 
@@ -30,7 +29,7 @@
   let selectedTimeFilter: "morning" | "afternoon" = "morning";
   let isOpenAfterOptions = false;
 
-  const bookingMode: BookingMode = $location.location?.mode || "3HOURS";
+  const bookingMode: BookingMode = $location.config.booking_window;
   const bookingDelays = ["5", "15", "30", "45", "60", "90", "120", "180"];
 
   // const slotsTimes = setBookingType(data.mode == "appointment" ? "appointment" : "waitlist");
@@ -56,7 +55,7 @@
   // });
 
   onMount(() => {
-    if (["AFTER", "3HOURS"].includes(bookingMode)) {
+    if (["DAY", "3H"].includes(bookingMode)) {
       setBookingDelay(Number(bookingDelays[0]));
       // setBookingDelay(500);
     }
@@ -98,8 +97,9 @@
     return workers.filter((w) => {
       const haveTicketInConflict = w.tickets.find((t) => {
         if (!t.rdvTime || !t.durationS) return false;
-        const end = t.rdvTime.getTime() + t.durationS * 1000;
-        return date.getTime() > t.rdvTime.getTime() && date.getTime() < end;
+        const rdvDate = new Date(t.rdvTime);
+        const end = rdvDate.getTime() + t.durationS * 1000;
+        return date.getTime() > rdvDate.getTime() && date.getTime() < end;
       });
 
       return w.formatedStatus !== "unavailable" && !haveTicketInConflict;
@@ -134,7 +134,7 @@
       <ProfessionalSelect {workers} bind:selectedWorkerId={filterWorkerId} />
     </div>
 
-    {#if ["AFTER", "3HOURS"].includes(bookingMode)}
+    {#if ["DAY", "3H"].includes(bookingMode)}
       <div in:fly={{ x: -100, duration: 300 }} class="flex flex-col gap-4 py-4 w-full">
         <div class="flex flex-col md:flex-row w-full gap-2 justify-between">
           <h2 class="text-lg font-bold">{m.yourArrivalTime()}</h2>
@@ -167,7 +167,7 @@
         </div>
       </div>
 
-      {#if bookingMode === "AFTER"}
+      {#if bookingMode === "DAY"}
         <span class="text-sm text-[#616163] text-center w-full">{m.or()}</span>
 
         <div

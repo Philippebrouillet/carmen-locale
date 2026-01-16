@@ -2,7 +2,7 @@
   import { goto } from "$app/navigation";
   import type { LocationInfo, TicketInfo } from "$src/types/Location";
 
-  //   export let ticket: TicketInfo;
+  export let ticket: TicketInfo;
   export let location: LocationInfo;
   export let ticketModules: any;
   let selectedStars = 0;
@@ -26,7 +26,12 @@
               "_blank",
             );
           } else {
-            window.open(ticketModules.form.url, "_blank");
+            const newUrl = new URL("https://tally.so/r/WOEgWJ");
+            newUrl.searchParams.set("rating", String(selectedStars));
+            newUrl.searchParams.set("locationName", location.name);
+            newUrl.searchParams.set("ticketId", String(ticket.id));
+            newUrl.searchParams.set("locationId", String(location.id));
+            window.open(newUrl.toString(), "_blank");
           }
         }}
         class="text-2xl transition-colors"

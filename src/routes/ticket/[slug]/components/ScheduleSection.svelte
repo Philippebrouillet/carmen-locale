@@ -2,6 +2,7 @@
   import SuccessIcon from "$lib/assets/icons/SuccessIcon.svelte";
   import { displayWaitingTime } from "$lib/formater";
   import * as m from "$lib/paraglide/messages.js";
+  import { languageTag } from "$src/lib/paraglide/runtime";
   import type { LocationTheme } from "$src/types/Location";
   import type { PopupType } from "$src/types/PopupInfos";
   import type { TicketPaymentType, TicketStatus } from "$src/types/Ticket";
@@ -15,9 +16,12 @@
   export let popupType: PopupType | null;
   export let isCancelledOrProAbsent: boolean = false;
   export let theme: LocationTheme;
+  export let timeWithLateTime: Date | null = null;
 
   $: ticketNumber = ticket.details.number;
-  $: expectedTime = displayWaitingTime(new Date(ticket.expectedTime));
+  $: expectedTime = timeWithLateTime
+    ? displayWaitingTime(timeWithLateTime)
+    : displayWaitingTime(new Date(ticket.expectedTime));
 
   const defaultStatusBadge: TicketPaymentType = "toPayOnPlace";
 
@@ -127,7 +131,7 @@
       <p class="font-bold text-secondary uppercase text-sm">
         {new Date(ticket.expectedTime).toDateString() === new Date().toDateString()
           ? "Aujourd'hui"
-          : new Date(ticket.expectedTime).toLocaleDateString("fr-FR", {
+          : new Date(ticket.expectedTime).toLocaleDateString(languageTag(), {
               weekday: "short",
               day: "numeric",
               month: "short",
@@ -148,8 +152,20 @@
           {/if}
         </span>
         {#if ticketStatus === "coming" || ticketStatus === "youAreNext" || ticketStatus === "iminent"}
-          <div class="border rounded-full p-1.5 self-start border-[#616163]">
-            <div class=" h-2 w-2 rounded-full bg-[#616163]" />
+          <div class="relative self-start">
+            <div
+              class="pulse-ring border {theme === 'NEUTRAL'
+                ? 'border-[#616163]'
+                : borderCardByTheme[theme]}"
+            ></div>
+
+            <div class="p-1">
+              <div
+                class=" min-h-2 min-w-2 rounded-full {theme === 'NEUTRAL'
+                  ? 'bg-[#616163]'
+                  : bgByTheme[theme]}"
+              />
+            </div>
           </div>
         {/if}
       </div>
@@ -170,7 +186,7 @@
 
             {#if ticketStatus === "inProgress"}
               <span class="text-xs font-extrabold">
-                {new Date(ticket.expectedTime).toLocaleTimeString("fr-FR", {
+                {new Date(ticket.expectedTime).toLocaleTimeString(languageTag(), {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}
@@ -202,3 +218,32 @@
     {/if}
   </div>
 </div>
+
+<style>
+  .pulse-wrapper {
+    align-self: flex-start;
+    position: relative;
+  }
+
+  .pulse-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 100%;
+    animation: pulse-border 2.3s ease-out infinite;
+    pointer-events: none;
+  }
+
+  @keyframes pulse-border {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    70% {
+      transform: scale(2.2);
+      opacity: 0;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+</style>

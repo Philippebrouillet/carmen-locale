@@ -5,7 +5,6 @@
 
   export let queuePosition;
   export let queueInfo;
-  // export let queueLen;
   export let ticketStatus: TicketStatus;
   export let ticketProgress: number = 0;
 
@@ -48,9 +47,10 @@
   //   const badgePaymentBgByTheme: Record<LocationTheme, string> = {
   // 'NEUTRAL':'bg-primary'
   //   };
-  console.log("ticketStatus", ticketStatus);
+
   $: proInfos = proInfosByTicketStatus[ticketStatus];
   $: isBlackBackground = ticketStatus === "yourTurn" || ticketStatus === "done";
+  $: isComingWithQueuePosition0 = ticketStatus === "coming" && queuePosition === 0;
 </script>
 
 <div
@@ -93,7 +93,7 @@
     </div>
   </div>
 
-  {#if ticketStatus !== "done" && ticketStatus !== "yourTurn"}
+  {#if ticketStatus !== "done" && ticketStatus !== "yourTurn" && !isComingWithQueuePosition0}
     <div class="flex flex-col w-full justify-center bg-[#F7F7F7] rounded-lg p-4 gap-2">
       <div
         class="font-bold text-[#616163] flex gap-2 justify-between text-sm {ticketProgress

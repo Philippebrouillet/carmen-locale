@@ -16,7 +16,7 @@
   import { PUBLIC_CARDEN_API } from "$env/static/public";
   import { goto } from "$app/navigation";
   import type { TicketStatus } from "$src/types/Ticket";
-  import { displayPriceInDollars } from "$src/lib/formater";
+  import { displayPriceInDollars, displayWaitingTime } from "$src/lib/formater";
   import { Store } from "lucide-svelte";
   import EvaluationSection from "./components/EvaluationSection.svelte";
   import { onDestroy, onMount } from "svelte";
@@ -32,6 +32,7 @@
   let ticketStatus: TicketStatus;
   let userTicketProgress: number = 0;
   let nextUserTicketProgress: number = 0;
+  let timeWithLateTime: Date | null = null;
 
   const evaluateTicketStatus = () => {
     let status: TicketStatus = "coming";
@@ -50,9 +51,9 @@
       return status;
     }
 
-    const isLate = Date.now() >= new Date(ticket.expectedTime).getTime() + GRACE_PERIOD_MS;
-
-    if (ticket.expectedTime && isLate && data.queuePosition > 0) {
+    // const isLate = Date.now() >= new Date(ticket.expectedTime).getTime() + GRACE_PERIOD_MS;
+    // ticket.expectedTime && isLate && data.queuePosition > 0) ||
+    if (calculateIfTicketIsLate()) {
       status = "isLate";
       return status;
     }
@@ -80,6 +81,49 @@
     }
 
     return status;
+  };
+
+  const getTicketStartTime = (ticket: TicketInfo) => {
+    const expectedTime = new Date(ticket.expectedTime).getTime();
+    const startTime = ticket.startedTime;
+    const finalTime =
+      startTime && new Date(startTime).getTime() < expectedTime
+        ? new Date(startTime).getTime()
+        : expectedTime;
+
+    return finalTime;
+  };
+  const calculateIfTicketIsLate = () => {
+    if (!data.queueLen) return false;
+
+    console.log("data.queueLen", data.queueLen);
+    const tickets = data.queueLen.filter((t) => t.id !== ticket.id);
+    if (tickets.length === 0) return false;
+
+    const lastTicket = tickets[tickets.length - 1];
+    const timeToCheck = getTicketStartTime(lastTicket);
+    const lastDuration = lastTicket.duration * 1000;
+    const lastEndTime = timeToCheck + lastDuration;
+    if (lastEndTime > new Date(ticket.expectedTime).getTime()) {
+      timeWithLateTime = new Date(lastEndTime);
+      return true;
+    }
+
+    const firstTicket = tickets[0];
+    const firstTicketTimeReference = getTicketStartTime(firstTicket);
+    let totalTime = firstTicketTimeReference;
+    for (const t of tickets) {
+      const durationMs = t.duration * 1000;
+      totalTime += durationMs;
+    }
+    const expectedTicketTime = new Date(ticket.expectedTime).getTime();
+    if (totalTime > expectedTicketTime) {
+      timeWithLateTime = new Date(totalTime);
+      return true;
+    } else {
+      timeWithLateTime = null;
+      return false;
+    }
   };
 
   const calculateProgressTicket = (ticket: TicketInfo) => {
@@ -147,11 +191,22 @@
             id: otherTicket.id,
             startedTime: otherTicket.startedTime,
             number: otherTicket.details.number,
+            isBreak: otherTicket.details?.tickettype === "BREAK",
           });
         }
 
-        data.queueLen = newQueueLen;
-        data.queuePosition = newQueueLen.length;
+        data.queueLen = [
+          ...newQueueLen,
+          {
+            duration: ticket.durationS,
+            expectedTime: ticket.expectedTime,
+            id: ticket.id,
+            startedTime: ticket.startedTime,
+            number: ticket.details.number,
+            isBreak: false,
+          },
+        ];
+        data.queuePosition = newQueueLen.filter((item) => !item.isBreak).length;
         data.data = data;
       } else {
         data.queueLen = [];
@@ -228,6 +283,7 @@
     isTicketGeneratedByClient,
     isCancelledOrProAbsent,
     theme,
+    timeWithLateTime,
   };
 
   const mainBgColorByTheme: Record<LocationTheme, string> = {
@@ -289,7 +345,9 @@
             Une prestation a pris plus de temps que prévu, nous avons ajusté votre horaire de
             passage pour éviter de vous faire attendre sur place.
             <p class="uppercase font-bold text-sm text-[#A03203] mt-1">
-              NOUVELLE ESTIMATION <span>14:30</span>
+              NOUVELLE ESTIMATION <span
+                >{timeWithLateTime ? displayWaitingTime(timeWithLateTime) : ""}</span
+              >
             </p>
           {/if}
         </div>
@@ -305,7 +363,7 @@
       {/if}
 
       {#if ticketStatus === "done"}
-        <EvaluationSection {location} ticketModules={data.queueInfo.ticketModules} />
+        <EvaluationSection {location} ticketModules={data.queueInfo.ticketModules} {ticket} />
       {/if}
 
       <!-- {#if false}
@@ -327,9 +385,11 @@
             }}
             size="sm"
             variant="outline"
-            class="border border-primary w-3/4 {disabledDeleteButton
-              ? 'bg-[#DFE5E7] cursor-not-allowed border-[#DFE5E7]'
-              : bgPrimaryActionButtonByTheme[theme]}  text-white"
+            class=" w-3/4 border {disabledDeleteButton
+              ? 'bg-[#DFE5E7] cursor-not-allowed border-[#DFE5E7] '
+              : bgPrimaryActionButtonByTheme[theme]}  text-white  {borderActionButtonByTheme[
+              theme
+            ]}"
           >
             <!-- {m.cancel()} -->
             Annuler la réservation
@@ -341,7 +401,7 @@
             href="/{locationSlug}"
             size="sm"
             variant="outline"
-            class=" w-3/4 {ticketStatus !== 'done' && isCancelledOrProAbsent
+            class=" w-3/4 {ticketStatus === 'done' || isCancelledOrProAbsent
               ? ` ${bgPrimaryActionButtonByTheme[theme]}  text-white`
               : `bg-transparent ${textSecondaryActionButtonByTheme[theme]}`} border {borderActionButtonByTheme[
               theme
@@ -399,15 +459,14 @@
   bind:popupTypeOpen={popupType}
   on:confirmAction={async () => {
     if (popupType === "CANCEL_RESERVATION") {
-      // const deletedTicket = await fetch(`${PUBLIC_CARDEN_API}/api/v2/ticket/${ticket.id}`, {
-      //   method: "DELETE",
-      //   // credentials: "include",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      // });
-      // console.log("deletedTicket", deletedTicket);
-      // goto(`/${locationSlug}`);
+      await fetch(`${PUBLIC_CARDEN_API}/api/v2/ticket/${ticket.id}/status`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify("CANCELED"),
+      });
     }
   }}
 />

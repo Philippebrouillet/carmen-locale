@@ -52,6 +52,7 @@ export function computeQueue(
       nextAvailable?.next,
       isWorking,
       isFullSlotBooked,
+      nextAvailable.ticketBefore,
       nextAvailable.isLate,
     );
 
@@ -241,6 +242,7 @@ const getWorkerFormatedStatus = (
   nextAvailableTime: Date | null,
   isWorkingTime: boolean,
   isFullSlotBooked: boolean,
+  ticketBefore: number,
   isLate?: boolean,
 ) => {
   let status: FormatedProStatus = "unavailable";
@@ -250,7 +252,7 @@ const getWorkerFormatedStatus = (
 
   // Check if current time is within worker's working hours
   if (
-    !isWorkingTime ||
+    isWorkingTime === false ||
     worker.status === "STOPED" ||
     nextAvailableTime == null ||
     isFullSlotBooked
@@ -259,11 +261,11 @@ const getWorkerFormatedStatus = (
     return status;
   }
 
-  if (worker.name === "Benjamin") {
-    console.log("isLate", isLate);
-  }
+  // if (worker.name === "Benjamin") {
+  //   console.log("isLate", isLate);
+  // }
 
-  if (isLate) {
+  if (isLate && ticketBefore > 0) {
     status = "waiting";
     return status;
   }

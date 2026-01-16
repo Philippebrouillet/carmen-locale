@@ -4,7 +4,7 @@
   import { location } from "$src/lib/stores/location.store.js";
   import { formatLocationResponse, mainBackgroundColorByTheme } from "$src/services/Location.js";
   import type { QueueLineSSEvent } from "$src/types/QueueLine.js";
-  import { onDestroy, onMount, setContext } from "svelte";
+  import { onDestroy, onMount } from "svelte";
 
   export let data;
 

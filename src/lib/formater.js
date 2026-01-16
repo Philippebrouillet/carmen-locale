@@ -1,4 +1,5 @@
 import { languageTag } from "$lib/paraglide/runtime.js";
+import * as m from "$lib/paraglide/messages.js";
 
 /** @param {Number} cents*/
 export function displayPriceInDollars(cents) {
@@ -56,14 +57,14 @@ export function displayDurationMs(milliseconds) {
 
   // Display the largest non-zero duration value
   if (days > 0) {
-    return days + (days === 1 ? " day" : " days");
+    return days + (days === 1 ? ` ${m.day()}` : ` ${m.days()}`);
   } else if (hours > 0) {
-    return hours + (hours === 1 ? " hour" : " hours");
+    return hours + (hours === 1 ? ` ${m.hour()}` : ` ${m.hours()}`);
   } else if (minutes >= 5) {
-    return minutes + (minutes === 1 ? " minute" : " minutes");
+    return minutes + (minutes === 1 ? ` ${m.minute()}` : ` ${m.minutes()}`);
   } else {
     // TODO : i18n
-    return "moins de 5 minutes";
+    return `${m.lessThan5Minutes()}`;
   }
 }
 

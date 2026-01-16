@@ -18,7 +18,7 @@
   ];
 
   const externalLinksButtonsCssByTheme: Record<LocationTheme, string> = {
-    NEUTRAL: "text-primary border-primary bg-white hover:bg-primary hover:text-primary ",
+    NEUTRAL: "text-primary border-primary hover:bg-primary hover:text-primary ",
     PINK: "text-pink border-pink hover:bg-pink hover:text-pink ",
     CARDEN: "text-blue border-blue hover:bg-blue hover:text-blue ",
   };
@@ -38,7 +38,7 @@
             <Button
               href={item.link}
               variant="outline"
-              class="w-full gap-2 {externalLinksButtonsCssByTheme[
+              class="w-full gap-2 bg-transparent {externalLinksButtonsCssByTheme[
                 theme
               ]} hover:bg-opacity-30  transition-all duration-150 hover:scale-[0.99] w-4/5 flex justify-start pl-14"
             >

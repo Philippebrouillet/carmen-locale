@@ -14,7 +14,7 @@
   import { shopStore } from "$lib/stores/basketStore";
   import { location } from "$src/lib/stores/location.store";
   import BookingHeader from "./BookingHeader.svelte";
-  import type { LocationTheme } from "$src/types/Location";
+  import type { LocationPaymentMode, LocationTheme, PaymentMethod } from "$src/types/Location";
   import {
     Clock3,
     Dock,
@@ -29,11 +29,9 @@
   import type { PopupType } from "$src/types/PopupInfos";
   import Popup from "$src/lib/components/popup/Popup.svelte";
 
-  type PaymentConfig = "FULL" | "FULLWITHCHOICES" | "ACCOMPTE" | "PAYONLINE";
-
-  const paymentConfig: PaymentConfig = "FULL";
-  const minimumServiceFeeInCents = 90; // 0.90
-  const defaultAcomptePrice = 500; // 5.00
+  let paymentMode: LocationPaymentMode = $location.config.payment_mode; // This should come from location settings or props
+  const minimumServiceFeeInCents = $location.config.minimum_service_fee; // 90 // 0.90
+  const defaultAcomptePrice = $location.config.upfront_fee_eur; // 5.00
 
   const iconColorByTheme: Record<LocationTheme, string> = {
     NEUTRAL: "text-primary",
@@ -56,7 +54,7 @@
   let isPaymentPopupOpen = false;
   let stripe: Stripe | null = null;
   let popupTypeOpen: PopupType | null = null;
-  let paymentMethod: "credit-card" | "in-store" = ["PAYONLINE", "ACCOMPTE"].includes(paymentConfig)
+  let paymentMethod: PaymentMethod = ["ONLINE_FULL", "ONLINE_UPFRONT_FEE"].includes(paymentMode)
     ? "credit-card"
     : "in-store";
 
@@ -77,13 +75,13 @@
   $: theme = $location.location.theme;
   $: iconColor = iconColorByTheme[theme];
   $: isOnlinePayment =
-    (paymentConfig === "FULLWITHCHOICES" && paymentMethod === "credit-card") ||
-    paymentConfig === "PAYONLINE" ||
-    paymentConfig === "ACCOMPTE";
+    (paymentMode === "CLIENT_CHOICE" && paymentMethod === "credit-card") ||
+    paymentMode === "ONLINE_FULL" ||
+    paymentMode === "ONLINE_UPFRONT_FEE";
   $: priceWithDiscountPrice = selectedService?.discountedPrice
     ? selectedService.discountedPrice
     : selectedService?.price || 0;
-  $: cardenFee = (priceWithDiscountPrice * 3) / 100;
+  $: cardenFee = (priceWithDiscountPrice * $location.config.service_fee_percent) / 100;
   $: isDefaultFees = cardenFee < minimumServiceFeeInCents;
   $: finalCardenFees = isDefaultFees ? minimumServiceFeeInCents : cardenFee;
   $: isSuperiorDiscounted = (selectedService?.discountedPrice || 0) > selectedService?.price;
@@ -92,21 +90,31 @@
     priceWithDiscountPrice + finalCardenFees - feesWithAccompte,
   );
   $: haveModifiedPrice = selectedService?.discountedPrice;
-  $: haveToPayFees = paymentConfig === "ACCOMPTE" || paymentConfig === "PAYONLINE" ? true : false;
+  $: haveToPayFees =
+    paymentMode === "ONLINE_UPFRONT_FEE" || paymentMode === "ONLINE_FULL" ? true : false;
 
   const calculateFinalPrice = () => {
+    console.log("Calculating final price with paymentMode:", paymentMode);
     if (isOnlinePayment) {
-      if (paymentConfig === "ACCOMPTE") return feesWithAccompte;
+      if (paymentMode === "ONLINE_UPFRONT_FEE") return feesWithAccompte;
       else {
-        if (paymentConfig === "PAYONLINE") return priceWithDiscountPrice + finalCardenFees;
+        if (paymentMode === "ONLINE_FULL") return priceWithDiscountPrice + finalCardenFees;
         else return priceWithDiscountPrice;
       }
     } else {
       return priceWithDiscountPrice;
     }
   };
+
+  let finalPriceToPay = 0;
+  $: paymentMode,
+    isOnlinePayment,
+    priceWithDiscountPrice,
+    (finalPriceToPay = calculateFinalPrice());
 </script>
 
+{finalPriceToPay}
+{paymentMode}
 {#if selectedService && selectedProfessional}
   <div class="flex">
     <div
@@ -233,8 +241,8 @@
               </div>
             {/if}
 
-            <!-- // ACCOMPTE DETAIL  // -->
-            {#if paymentConfig === "ACCOMPTE"}
+            <!-- // ONLINE_UPFRONT_FEE DETAIL  // -->
+            {#if paymentMode === "ONLINE_UPFRONT_FEE"}
               <div class="py-2 {backgroundColorFeeByTheme[theme]} bg-opacity-30 px-6 md:px-8">
                 <div class="flex justify-between items-center text-primary font-bold text-sm">
                   <p class="text-primary flex items-center gap-1.5">
@@ -260,34 +268,34 @@
             {/if}
 
             <!-- FINAL PAYMENT DETAIL  -->
-            {#if paymentConfig !== "FULLWITHCHOICES"}
+            {#if paymentMode !== "CLIENT_CHOICE"}
               <div
                 class="flex justify-between items-center text-primary text-sm font-bold px-6 md:px-8"
               >
                 <p class="flex items-center gap-1.5">
-                  {#if paymentConfig === "ACCOMPTE" || paymentConfig === "FULL"}
+                  {#if paymentMode === "ONLINE_UPFRONT_FEE" || paymentMode === "ONSITE_FULL"}
                     <StoreIcon size={18} />
-                  {:else if paymentConfig === "PAYONLINE"}
+                  {:else if paymentMode === "ONLINE_FULL"}
                     <Dock size={18} />
                   {/if}
 
                   <span
-                    >{paymentConfig === "ACCOMPTE"
+                    >{paymentMode === "ONLINE_UPFRONT_FEE"
                       ? m.remaindToPayInPlace()
-                      : paymentConfig === "PAYONLINE"
+                      : paymentMode === "ONLINE_FULL"
                         ? m.toBePaidOnline()
-                        : paymentConfig === "FULL"
+                        : paymentMode === "ONSITE_FULL"
                           ? m.toBePaidOnSite()
                           : ""}</span
                   >
                 </p>
 
                 <span
-                  >{paymentConfig === "ACCOMPTE"
+                  >{paymentMode === "ONLINE_UPFRONT_FEE"
                     ? totalToPayInPlace
-                    : paymentConfig === "PAYONLINE"
+                    : paymentMode === "ONLINE_FULL"
                       ? displayPriceInDollars(priceWithDiscountPrice + finalCardenFees)
-                      : paymentConfig === "FULL"
+                      : paymentMode === "ONSITE_FULL"
                         ? displayPriceInDollars(priceWithDiscountPrice)
                         : ""}</span
                 >
@@ -296,7 +304,7 @@
           </div>
 
           <!-- // PAYMENT METHOD CHOICE  // -->
-          {#if paymentConfig === "FULLWITHCHOICES"}
+          {#if paymentMode === "CLIENT_CHOICE"}
             <div class="pb-2 mt-4 md:pb-6 md:mt-6">
               <h1 class="font-bold text-lg">{m.paymentMethod()}</h1>
             </div>
@@ -367,7 +375,7 @@
         >
           {#if isOnlinePayment}
             <div class="ml-2">
-              {#if paymentConfig === "ACCOMPTE"}
+              {#if paymentMode === "ONLINE_UPFRONT_FEE"}
                 <div class="flex flex-col">
                   {m.bookSlot()}
                   {displayPriceInDollars(feesWithAccompte)}
@@ -377,7 +385,7 @@
                 </div>
               {:else}
                 {m.pay()}
-                {#if paymentConfig === "PAYONLINE"}
+                {#if paymentMode === "ONLINE_FULL"}
                   {displayPriceInDollars(priceWithDiscountPrice + finalCardenFees)}
                 {:else}
                   {displayPriceInDollars(priceWithDiscountPrice)}
@@ -390,11 +398,7 @@
         </Button>
       </div>
 
-      <PaymentPopup
-        bind:open={isPaymentPopupOpen}
-        {paymentMethod}
-        finalPriceToPay={calculateFinalPrice()}
-      />
+      <PaymentPopup bind:open={isPaymentPopupOpen} {paymentMethod} {finalPriceToPay} />
     </div>
     <div class="hidden lg:block h-screen w-1/2 lg:relative">
       <img src={$location.location.banner} alt="banner" class="h-full w-full object-cover" />
