@@ -17,6 +17,7 @@
   export let isCancelledOrProAbsent: boolean = false;
   export let theme: LocationTheme;
   export let timeWithLateTime: Date | null = null;
+  export let isExpectedTimeClose: boolean = false;
 
   $: ticketNumber = ticket.details.number;
   $: expectedTime = timeWithLateTime
@@ -54,7 +55,6 @@
       textColor: "text-white",
     },
     iminent: { text: "Passage imminent", icon: Bell, bg: "bg-[#00D4AA]", textColor: "text-white" },
-    // done: { text: "Service terminé", icon: SuccessIcon, bg: "bg-[#23BBAC]", textColor: "text-white" },
     inProgress: { text: "Heure de fin estimée", icon: Clock3 },
     yourTurn: null,
 
@@ -95,7 +95,12 @@
     ticketStatus === "inProgress" ||
     ticketStatus === "yourTurn";
   $: badgePaymentInfos = dataBadgePaiementByPaymentType[badgePaymentStatus];
-  $: badgeInfosByStatus = dataBadgeInfosByStatus[ticketStatus];
+
+  let badgeInfosByStatus = dataBadgeInfosByStatus[ticketStatus];
+  $: badgeInfosByStatus =
+    ticketStatus === "iminent" && !isExpectedTimeClose
+      ? dataBadgeInfosByStatus["coming"]
+      : dataBadgeInfosByStatus[ticketStatus];
 </script>
 
 <div

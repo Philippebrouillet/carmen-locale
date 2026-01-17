@@ -5,9 +5,9 @@
   import { loadStripe, type Stripe } from "@stripe/stripe-js";
   import { onMount } from "svelte";
   // import type { CountryCode } from "svelte-tel-input/types";
-
+  import * as Drawer from "$lib/components/ui/drawer";
   import BookingServiceBox from "./BookingServiceBox.svelte";
-  import PaymentPopup from "./PaymentPopup.svelte";
+
   import { languageTag } from "$lib/paraglide/runtime";
   import * as m from "$lib/paraglide/messages.js";
 
@@ -28,10 +28,20 @@
 
   import type { PopupType } from "$src/types/PopupInfos";
   import Popup from "$src/lib/components/popup/Popup.svelte";
+  import PaymentForm from "./PaymentForm.svelte";
 
-  let paymentMode: LocationPaymentMode = $location.config.payment_mode; // This should come from location settings or props
-  const minimumServiceFeeInCents = $location.config.minimum_service_fee; // 90 // 0.90
-  const defaultAcomptePrice = $location.config.upfront_fee_eur; // 5.00
+  let paymentMode: LocationPaymentMode = $location.config.payment_mode;
+
+  $: minimumServiceFeeInCents = $location.config.minimum_service_fee; // 90 // 0.90
+  $: accomptePrice =
+    $location.config.upfront_fee_mode === "CONSTANT"
+      ? $location.config.upfront_fee_eur
+      : (priceWithDiscountPrice * $location.config.upfront_fee_percent) / 100;
+
+  $: cardenFee =
+    $location.config.service_fee_mode === "CONSTANT"
+      ? $location.config.service_fee_eur
+      : (priceWithDiscountPrice * $location.config.service_fee_percent) / 100;
 
   const iconColorByTheme: Record<LocationTheme, string> = {
     NEUTRAL: "text-primary",
@@ -81,11 +91,10 @@
   $: priceWithDiscountPrice = selectedService?.discountedPrice
     ? selectedService.discountedPrice
     : selectedService?.price || 0;
-  $: cardenFee = (priceWithDiscountPrice * $location.config.service_fee_percent) / 100;
   $: isDefaultFees = cardenFee < minimumServiceFeeInCents;
   $: finalCardenFees = isDefaultFees ? minimumServiceFeeInCents : cardenFee;
   $: isSuperiorDiscounted = (selectedService?.discountedPrice || 0) > selectedService?.price;
-  $: feesWithAccompte = finalCardenFees + defaultAcomptePrice;
+  $: feesWithAccompte = finalCardenFees + accomptePrice;
   $: totalToPayInPlace = displayPriceInDollars(
     priceWithDiscountPrice + finalCardenFees - feesWithAccompte,
   );
@@ -253,12 +262,12 @@
                     >
                   </p>
                   <p class="text-lg">
-                    {displayPriceInDollars(finalCardenFees + defaultAcomptePrice)}
+                    {displayPriceInDollars(finalCardenFees + accomptePrice)}
                   </p>
                 </div>
 
                 <span class="text-xs text-[#616163]"
-                  >{displayPriceInDollars(defaultAcomptePrice)} + {displayPriceInDollars(
+                  >{displayPriceInDollars(accomptePrice)} + {displayPriceInDollars(
                     finalCardenFees,
                   )}</span
                 >
@@ -396,7 +405,11 @@
         </Button>
       </div>
 
-      <PaymentPopup bind:open={isPaymentPopupOpen} {paymentMethod} {finalPriceToPay} />
+      <Drawer.Root bind:open={isPaymentPopupOpen}>
+        <Drawer.Content class=" z-[120] lg:w-1/2 h-full">
+          <PaymentForm {paymentMethod} {finalPriceToPay} />
+        </Drawer.Content>
+      </Drawer.Root>
     </div>
     <div class="hidden lg:block h-screen w-1/2 lg:relative">
       <img src={$location.location.banner} alt="banner" class="h-full w-full object-cover" />

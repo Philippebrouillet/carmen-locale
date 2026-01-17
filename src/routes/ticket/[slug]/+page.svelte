@@ -23,7 +23,6 @@
 
   export let data;
   $: console.log("data", data);
-  const GRACE_PERIOD_MS = 5 * 60 * 1000;
   const locationSlug = data.location.location.id;
 
   let ticket = data.ticket;
@@ -95,9 +94,11 @@
   };
   const calculateIfTicketIsLate = () => {
     if (!data.queueLen) return false;
-
-    console.log("data.queueLen", data.queueLen);
-    const tickets = data.queueLen.filter((t) => t.id !== ticket.id);
+    const tickets = data.queueLen.filter(
+      (t) =>
+        t.id !== ticket.id &&
+        new Date(t.expectedTime).getTime() <= new Date(ticket.expectedTime).getTime(),
+    );
     if (tickets.length === 0) return false;
 
     const lastTicket = tickets[tickets.length - 1];
@@ -284,7 +285,17 @@
     isCancelledOrProAbsent,
     theme,
     timeWithLateTime,
+    isExpectedTimeClose,
   };
+
+  const checkExpectedTimeClose = () => {
+    const time = new Date(ticket.expectedTime).getTime();
+    const now = new Date().getTime();
+    const diffInMinutes = (time - now) / (1000 * 60);
+    return diffInMinutes <= 30;
+  };
+
+  $: isExpectedTimeClose = checkExpectedTimeClose();
 
   const mainBgColorByTheme: Record<LocationTheme, string> = {
     CARDEN: "bg-[#F8FAFD]",
@@ -356,6 +367,7 @@
       {#if data.queuePosition < 2 && !isCancelledOrProAbsent}
         <OverviewSection
           {ticketStatus}
+          {isExpectedTimeClose}
           queueInfo={data.queueInfo}
           queuePosition={data.queuePosition}
           ticketProgress={data.queuePosition === 0 ? userTicketProgress : nextUserTicketProgress}
@@ -363,7 +375,12 @@
       {/if}
 
       {#if ticketStatus === "done"}
-        <EvaluationSection {location} ticketModules={data.queueInfo.ticketModules} {ticket} />
+        <EvaluationSection
+          {location}
+          ticketModules={data.queueInfo.ticketModules}
+          {ticket}
+          googlePlaceId={data.config.google_place_id}
+        />
       {/if}
 
       <!-- {#if false}
@@ -415,6 +432,7 @@
 
       {#if data.queuePosition > 1 && !isCancelledOrProAbsent}
         <OverviewSection
+          {isExpectedTimeClose}
           {ticketStatus}
           queueInfo={data.queueInfo}
           queuePosition={data.queuePosition}

@@ -1,12 +1,12 @@
 <script lang="ts">
   import * as m from "$lib/paraglide/messages.js";
-  import type { LocationStatus, LocationTheme } from "$src/types/Location";
   import type { TicketStatus } from "$src/types/Ticket";
 
   export let queuePosition;
   export let queueInfo;
   export let ticketStatus: TicketStatus;
   export let ticketProgress: number = 0;
+  export let isExpectedTimeClose: boolean;
 
   const proInfosByTicketStatus = {
     coming: { title: `${queueInfo.name} est occupé`, description: "Service en cours" },
@@ -47,15 +47,19 @@
   //   const badgePaymentBgByTheme: Record<LocationTheme, string> = {
   // 'NEUTRAL':'bg-primary'
   //   };
-
-  $: proInfos = proInfosByTicketStatus[ticketStatus];
+  let proInfos = proInfosByTicketStatus[ticketStatus];
+  $: isExpectedTimeClose,
+    (proInfos =
+      ["iminent", "youAreNext"].includes(ticketStatus) && !isExpectedTimeClose
+        ? proInfosByTicketStatus["coming"]
+        : proInfosByTicketStatus[ticketStatus]);
   $: isBlackBackground = ticketStatus === "yourTurn" || ticketStatus === "done";
   $: isComingWithQueuePosition0 = ticketStatus === "coming" && queuePosition === 0;
 </script>
 
 <div
   class=" {isBlackBackground
-    ? 'bg-primary '
+    ? 'bg-primary'
     : 'bg-white'}  p-4 flex rounded-2xl shadow-sm flex-col gap-2 w-full"
 >
   <div class="flex gap-2">
@@ -71,7 +75,7 @@
         </p>
 
         <!-- WALK IN SVG -->
-        {#if ticketStatus === "youAreNext" || ticketStatus === "iminent"}
+        {#if ["iminent, youAreNext"].includes(ticketStatus) && isExpectedTimeClose}
           <div class="rounded-full px-2.5 py-1.5 bg-neutral-200 flex justify-center items-center">
             <svg
               width="13"

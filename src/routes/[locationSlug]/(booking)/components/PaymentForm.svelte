@@ -3,7 +3,7 @@
 
   import { PUBLIC_CARDEN_API, PUBLIC_STRIPE_KEY } from "$env/static/public";
   import { Button } from "$lib/components/ui/button";
-  import { Checkbox } from "$lib/components/ui/checkbox/index.js";
+
   import * as Drawer from "$lib/components/ui/drawer";
 
   import { clock } from "$lib/stores/clock.svelte";
@@ -19,7 +19,7 @@
   import { nextAvailableTime } from "$src/services/QueueLine";
   import { location } from "$src/lib/stores/location.store";
 
-  import { CardCvc, CardExpiry, CardNumber, Elements } from "svelte-stripe";
+  import { CardCvc, CardExpiry, CardNumber, Elements, PaymentRequestButton } from "svelte-stripe";
 
   import {
     loadStripe,
@@ -33,8 +33,10 @@
 
   export let paymentMethod: PaymentMethod;
   export let finalPriceToPay: number;
-
+  let card;
+  let disableButton = true;
   let cardElement: StripeElementBase | undefined = undefined;
+  let expressCheckoutElementReady = false;
   let stripe: Stripe | null = null;
   let now = new Date($clock);
   let workerId = $shopStore.selectedProfessional?.id;
@@ -50,6 +52,13 @@
   // let firstInfo = nextAvailableTime(workerTickets, now, firstStart);
   // let firstIsFree = firstInfo.isFirstSlot && !(rdv != null && firstInfo.createHole);
   let userExist: boolean | null = null;
+  const paymentRequest = {
+    country: "US",
+    currency: "usd",
+    total: { label: "Demo total", amount: 1099 },
+    requestPayerName: true,
+    requestPayerEmail: true,
+  };
 
   let formData: { name: string; phone: E164Number | null; email: string } = {
     name: "",
@@ -59,6 +68,12 @@
   let phoneValid = true;
   let selectedCountry: CountryCode = "FR";
   let isCreatingTicket = false;
+  let errorMessage = "";
+
+  function isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
 
   // let cardenFeeAccept = false;
 
@@ -69,7 +84,15 @@
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ ticketId }),
+      body: JSON.stringify({
+        ticketId,
+        clientChoice:
+          $location.config.payment_mode === "CLIENT_CHOICE"
+            ? paymentMethod === "credit-card"
+              ? "ONLINE_FULL"
+              : "ONSITE_FULL"
+            : undefined,
+      }),
     });
 
     return await response.json();
@@ -135,30 +158,30 @@
       return;
     }
 
-    if (workerId == null) {
-      console.error("worker id not defined");
+    if (!formData.name || formData.name.trim() === "") {
+      errorMessage = "Name is required";
       return;
     }
 
-    if (formData.name == null) {
-      console.error("userName not defined");
+    if (!formData.phone || !phoneValid) {
+      errorMessage = "Phone is required and must be valid";
       return;
     }
 
-    if (formData.phone == null) {
-      console.error("phone not defined");
+    if (!formData.email || !isValidEmail(formData.email)) {
+      errorMessage = "Email is required and must be valid";
+      return;
+    }
+
+    if (formData.email == null) {
+      errorMessage = "Email is required";
       return;
     }
 
     if (servicesId == null) {
-      console.error("servicesId not defined");
+      errorMessage = "Services ID is required";
       return;
     }
-
-    // if (info.next.toISOString() == null) {
-    //   console.error("undefined expected time");
-    //   return;
-    // }
 
     isCreatingTicket = true;
     try {
@@ -208,24 +231,58 @@
       const stripeKey = PUBLIC_STRIPE_KEY;
       if (stripeKey) {
         stripe = await loadStripe(stripeKey);
-        //   if (stripe) {
-        //     // 2️⃣ créer PaymentRequest pour Apple Pay
-        //     const paymentRequest = stripe.paymentRequest({
-        //       country: "US",
-        //       currency: "usd",
-        //       total: { label: "Total", amount: 0 }, // amount=0 car Stripe prendra PaymentIntent amount
-        //       requestPayerName: true,
-        //       requestPayerEmail: true,
-        //     });
 
-        //     const canPay = await paymentRequest.canMakePayment();
-        //     if (!canPay) return;
+        if (!stripe) {
+          console.error("Stripe failed to load");
+          return;
+        }
 
-        //     const elements = stripe.elements();
-        //     const prButton = elements.create("paymentRequestButton", { paymentRequest });
-        //     prButton.mount("#apple-pay-button");
-        //   }
-        // }
+        const elements = stripe.elements();
+        const style = {
+          base: {
+            color: "#32325d",
+            fontFamily: "Roboto, sans-serif",
+            fontSmoothing: "antialiased",
+            fontSize: "16px",
+            "::placeholder": {
+              color: "#32325d",
+            },
+          },
+          invalid: {
+            fontFamily: "Roboto, sans-serif",
+            color: "#fa755a",
+            iconColor: "#fa755a",
+          },
+        };
+
+        card = elements.create("card", { style, hidePostalCode: true });
+        // Stripe injects an iframe into the DOM
+
+        card.mount("#card-element");
+
+        card.on("change", function (event) {
+          // Disable the Pay button if there are no card details in the Element
+          disableButton = event.complete && !event.error ? false : true;
+          document.querySelector("#card-error").textContent = event.error
+            ? event.error.message
+            : "";
+        });
+
+        // 2️⃣ créer PaymentRequest pour Apple Pay
+        const paymentRequest = stripe.paymentRequest({
+          country: "US",
+          currency: "usd",
+          total: { label: "Demo total", amount: 1099 },
+          requestPayerName: true,
+          requestPayerEmail: true,
+        });
+
+        const canPay = await paymentRequest.canMakePayment();
+        console.log("canPay", canPay);
+        if (!canPay) return;
+
+        const prButton = elements.create("paymentRequestButton", { paymentRequest });
+        prButton.mount("#apple-pay-button");
       }
     }
   });
@@ -260,10 +317,16 @@
   <form class="flex flex-col gap-6 h-fit md:h-fit py-6" on:submit|preventDefault={handleSubmit}>
     <div class="flex flex-col gap-3 w-full">
       <div class=" w-full">
-        <FormInput label={""} placeholder="John" id="first-name" bind:value={formData.name} />
+        <FormInput
+          label={m.firstName()}
+          placeholder="John"
+          id="first-name"
+          bind:value={formData.name}
+        />
       </div>
       <div class=" flex flex-col gap-1">
         <label for="phone" class="text-xs text-gray-400 font-bold uppercase">{m.phone()}</label>
+
         <PhoneInput
           bind:value={formData.phone}
           bind:valid={phoneValid}
@@ -276,42 +339,39 @@
         label={m.email()}
         placeholder="example@mail.com"
         id="email"
+        type="email"
         bind:value={formData.email}
       />
     </div>
-    {#if stripe}
+
+    <!-- <Elements {stripe}> -->
+    <!-- {#if paymentMethod === "credit-card"} -->
+    <!-- <div id="apple-pay-button"></div> -->
+    <!-- <div class=" bg-white py-3 px-2 rounded-lg"> -->
+    <!-- <CardNumber bind:element={cardElement} /> -->
+    <!-- </div> -->
+    <!-- <div class=" bg-white py-3 px-2 rounded-lg"><CardExpiry /></div> -->
+
+    <!-- <div class=" bg-white py-3 px-2 rounded-lg"><CardCvc /></div> -->
+    <!-- {/if} -->
+    <!-- </Elements> -->
+
+    <!-- <div
+      id="payment-element"
+      class="{expressCheckoutElementReady ? 'border border-gray-200 mb-2' : ''}  rounded-md"
+    ></div> -->
+    <!-- {#if stripe}
       <Elements {stripe}>
-        {#if paymentMethod === "credit-card"}
-          <!-- <div id="apple-pay-button"></div> -->
-          <div class=" bg-white py-3 px-2 rounded-lg">
-            <CardNumber bind:element={cardElement} />
-          </div>
-          <div class=" bg-white py-3 px-2 rounded-lg"><CardExpiry /></div>
-
-          <div class=" bg-white py-3 px-2 rounded-lg"><CardCvc /></div>
-        {/if}
+        <div class="wrapper">
+          <PaymentRequestButton {paymentRequest} on:paymentmethod={pay} />
+        </div>
       </Elements>
-    {/if}
-
-    <!-- <div class="flex space-x-2">
-      <Checkbox
-        id="carden-fee"
-        bind:checked={cardenFeeAccept}
-        aria-labelledby="carden-fee"
-        required
-      />
-      <label
-        id="carden-fee"
-        for="terms"
-        class="text-xs font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-      >
-        {#if paymentMethod == "credit-card"}
-          {m.termsCard({ value: "€1.50" })}
-        {:else}
-          {m.termsOnSite({ value: "€1.50", name: $location.location.name })}
-        {/if}
-      </label>
-    </div> -->
+    {/if} -->
+    <div id="apple-pay-button"></div>
+    <div
+      id="card-element"
+      class="w-full h-11 px-3 py-3 rounded-t-lg bg-white border border-gray-200"
+    ></div>
 
     <div class="flex flex-row justify-between">
       <div class="flex flex-col">
@@ -323,8 +383,12 @@
         {displayPriceInDollars(finalPriceToPay)}
       </p>
     </div>
+    <p id="card-error" role="alert" class="pt-2 font-bold text-red-500 text-center text-sm"></p>
+    {#if errorMessage}
+      <p class="text-red-500 text-sm">{errorMessage}</p>
+    {/if}
 
-    <Button type="submit" class="rounded-lg min-h-12"
+    <Button disabled={disableButton} type="submit" class="rounded-lg min-h-12 disabled:opacity-50"
       >{isCreatingTicket ? "..." : m.makeReservation()}</Button
     >
     <div class="flex justify-center items-center">

@@ -5,6 +5,7 @@
   export let ticket: TicketInfo;
   export let location: LocationInfo;
   export let ticketModules: any;
+  export let googlePlaceId: string | null = null;
   let selectedStars = 0;
 </script>
 
@@ -22,7 +23,8 @@
 
           if (selectedStars > 3) {
             window.open(
-              "https://www.google.com/search?hl=fr-FR&gl=fr&q=Barber+Connect+%7C+Logiciel+de+gestion,+130+Rue+de+Lourmel,+75015+Paris&ludocid=12316678434915115174&lsig=AB86z5WiN0REQdWz-5bnG7IETHq2#lrd=0x47e671e809220ec1:0xaaeda1c7add460a6,3",
+              "https://search.google.com/local/writereview?placeid=" + googlePlaceId ||
+                "ChIJwQ4iCehx5kcRpmDUrceh7ao",
               "_blank",
             );
           } else {

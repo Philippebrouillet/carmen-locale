@@ -30,9 +30,22 @@
   let isOpenAfterOptions = false;
 
   const bookingMode: BookingMode = $location.config.booking_window;
-  const bookingDelays = ["5", "15", "30", "45", "60", "90", "120", "180"];
+  let bookingDelays = [
+    { time: "5", haveWorkerAvailable: false },
+    { time: "15", haveWorkerAvailable: false },
+    { time: "30", haveWorkerAvailable: false },
+    { time: "45", haveWorkerAvailable: false },
+    { time: "60", haveWorkerAvailable: false },
+    { time: "90", haveWorkerAvailable: false },
+    { time: "120", haveWorkerAvailable: false },
+    { time: "180", haveWorkerAvailable: false },
+  ];
 
   // const slotsTimes = setBookingType(data.mode == "appointment" ? "appointment" : "waitlist");
+  // const formatter = new Intl.DateTimeFormat(languageTag(), {
+  //   day: "numeric",
+  //   weekday: "long",
+  // });
 
   const parseTimeString = (time: string): { hour: number; minutes: number } => {
     const [hourStr, minuteStr] = time.split(":");
@@ -63,17 +76,40 @@
   const morningSlots = createSlotDate("8:00", "12:00");
   const afternoonSlots = createSlotDate("12:00", "19:00");
 
-  // const formatter = new Intl.DateTimeFormat(languageTag(), {
-  //   day: "numeric",
-  //   weekday: "long",
-  // });
+  const filterShowableWorkers = (workers, date) => {
+    return workers.filter((w) => {
+      const haveTicketInConflict = w.tickets.find((t) => {
+        if (!t.rdvTime || !t.durationS) return false;
+        const rdvDate = new Date(t.rdvTime);
+        const end = rdvDate.getTime() + t.durationS * 1000;
+        return date.getTime() > rdvDate.getTime() && date.getTime() < end;
+      });
+
+      return w.formatedStatus !== "unavailable" && !haveTicketInConflict;
+    });
+  };
+
+  const setShowableBookingDelays = () => {
+    for (const delay of bookingDelays) {
+      const start = new Date(now.getTime() + Number(delay.time) * 60000);
+      const haveWorkerAvailable = filterShowableWorkers(
+        computeQueue($location, new Date($clock), start),
+        start,
+      );
+
+      delay.haveWorkerAvailable = haveWorkerAvailable.length > 0 ? true : false;
+    }
+    bookingDelays = bookingDelays;
+  };
 
   onMount(() => {
     if (["DAY", "3H"].includes(bookingMode)) {
-      setBookingDelay(Number(bookingDelays[0]));
-      // setBookingDelay(500);
+      setShowableBookingDelays();
+      const firstAvailableDelay = bookingDelays.find((d) => d.haveWorkerAvailable)?.time;
+      if (firstAvailableDelay) {
+        setBookingDelay(Number(firstAvailableDelay));
+      }
     }
-
     if (filterWorkerId) {
       const selectedWorker = workers.find((w) => w.id == filterWorkerId);
       if (selectedWorker?.nextAvailable?.next)
@@ -107,18 +143,7 @@
   //   (w) => !["DISABLED", "STOPED"].includes(w.status),
   // );
 
-  const filterShowableWorkers = (workers, date) => {
-    return workers.filter((w) => {
-      const haveTicketInConflict = w.tickets.find((t) => {
-        if (!t.rdvTime || !t.durationS) return false;
-        const rdvDate = new Date(t.rdvTime);
-        const end = rdvDate.getTime() + t.durationS * 1000;
-        return date.getTime() > rdvDate.getTime() && date.getTime() < end;
-      });
-
-      return w.formatedStatus !== "unavailable" && !haveTicketInConflict;
-    });
-  };
+  $: $location, $clock, setShowableBookingDelays();
 
   $: workers = filterShowableWorkers(computeQueue($location, new Date($clock), start), start);
 
@@ -155,17 +180,18 @@
         </div>
         <div class="grid grid-cols-4 gap-2">
           {#each bookingDelays as delay, i}
-            {@const numberDelay = Number(delay)}
+            {@const numberDelay = Number(delay.time)}
             <button
+              disabled={!delay.haveWorkerAvailable}
               in:fly|global={{ y: 20, duration: 300, delay: 100 * i }}
               on:click={() => {
-                bookingDelay = delay;
+                bookingDelay = delay.time;
                 setBookingDelay(numberDelay);
                 setBookingDate(new Date(now.getTime() + numberDelay * 60000));
                 selectedTime = null;
               }}
-              class="flex gap-2 justify-between p-3 border rounded-xl transition-all duration-200 ease-in-out font-bold h-[69px] {bookingDelay ==
-              delay
+              class="flex gap-2 justify-between disabled:opacity-30 disabled:cursor-not-allowed p-3 border rounded-xl transition-all duration-200 ease-in-out font-bold h-[69px] {bookingDelay ==
+              delay.time
                 ? `${bookingDelayBg} text-primary-foreground `
                 : 'bg-white hover:bg-gray-100'}  "
             >

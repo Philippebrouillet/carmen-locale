@@ -1,4 +1,4 @@
-import type { ServiceInfo, WorkerInfo } from "$src/types/Location";
+import type { LocationPaymentMode, ServiceInfo, WorkerInfo } from "$src/types/Location";
 import { writable } from "@macfja/svelte-persistent-store";
 
 interface ShopStore {

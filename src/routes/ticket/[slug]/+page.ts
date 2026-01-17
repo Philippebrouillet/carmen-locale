@@ -6,6 +6,7 @@ export async function load({ params, fetch }) {
   const slug = params.slug;
   const resp = await fetch(`${PUBLIC_CARDEN_API}/api/v2/ticket/${slug}`);
   let ticket = null;
+
   if (resp.ok) {
     ticket = await resp.json();
     console.log("ticket", ticket);
@@ -14,11 +15,16 @@ export async function load({ params, fetch }) {
   const locationResponse = await fetch(
     `${PUBLIC_CARDEN_API}/api/v3/location/${ticket.ticket.locationId}`,
   );
+  const configResp = await fetch(
+    `${PUBLIC_CARDEN_API}/api/v1/location/${ticket.ticket.locationId}/config`,
+  );
 
   if (locationResponse.ok) {
     const json = await locationResponse.json();
     const location = formatLocationResponse(json);
-    return { ...ticket, location: location };
+    const configJson = await configResp.json();
+
+    return { ...ticket, location: location, config: configJson.config };
   }
 
   return error(404, "Not found");
