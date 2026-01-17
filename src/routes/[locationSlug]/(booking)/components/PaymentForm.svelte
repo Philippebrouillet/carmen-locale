@@ -265,9 +265,9 @@
         if (!canPay.applePay && !canPay.googlePay) return;
 
         const prButton = elements.create("paymentRequestButton", { paymentRequest });
-        paymentRequest.on("paymentmethod", (e) => {
-          console.log("checkoutPaymentMethod", e);
-          checkoutPaymentMethod = e.detail.paymentMethod;
+        paymentRequest.on("paymentmethod", (detail) => {
+          console.log("checkoutPaymentMethod", detail);
+          checkoutPaymentMethod = detail.paymentMethod;
         });
         prButton.mount("#apple-pay-button");
       }
