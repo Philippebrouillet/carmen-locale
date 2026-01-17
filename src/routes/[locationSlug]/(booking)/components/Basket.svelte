@@ -131,7 +131,7 @@
     <div
       class="relative {backgroundByTheme[
         theme
-      ]} flex flex-col border lg:w-1/2 w-full overflow-y-auto h-screen"
+      ]} flex flex-col border lg:w-1/2 w-full overflow-y-auto h-screen pb-[200px]"
     >
       <div class="px-6 md:px-8">
         <BookingHeader text={m.bookingBasketTitle()} />
