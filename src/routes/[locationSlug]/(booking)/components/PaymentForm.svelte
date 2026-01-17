@@ -268,6 +268,9 @@
         paymentRequest.on("paymentmethod", (detail) => {
           console.log("checkoutPaymentMethod", detail);
           checkoutPaymentMethod = detail.paymentMethod;
+          detail.complete("success");
+          // Handle successful payment here
+          handleSubmit();
         });
         prButton.mount("#apple-pay-button");
       }
