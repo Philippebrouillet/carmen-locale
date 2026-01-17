@@ -19,25 +19,22 @@
   import { nextAvailableTime } from "$src/services/QueueLine";
   import { location } from "$src/lib/stores/location.store";
 
-  import { CardCvc, CardExpiry, CardNumber, Elements, PaymentRequestButton } from "svelte-stripe";
-
   import {
     loadStripe,
     type Stripe,
     type StripeCardElement,
-    type StripeCardNumberElement,
-    type StripeElementBase,
+    type PaymentMethod,
   } from "@stripe/stripe-js";
 
   import { onMount } from "svelte";
-  import type { PaymentMethod } from "$src/types/Location";
+  import type { PaymentMethod as LocationPaymentMethod } from "$src/types/Location";
 
-  export let paymentMethod: PaymentMethod;
+  export let paymentMethod: LocationPaymentMethod;
   export let finalPriceToPay: number;
+
   let card: StripeCardElement;
   let disableButton = true;
-  let cardElement: StripeElementBase | undefined = undefined;
-  let checkoutPaymentMethod: any = undefined;
+  let checkoutPaymentMethod: PaymentMethod | undefined = undefined;
   let stripe: Stripe | null = null;
   let now = new Date($clock);
   let workerId = $shopStore.selectedProfessional?.id;
@@ -101,19 +98,15 @@
     let _paymentMethod = checkoutPaymentMethod;
 
     if (!_paymentMethod) {
-      console.log("Creating payment method from card element");
       const { paymentMethod, error } = await stripe.createPaymentMethod({
         type: "card",
         card: card,
       });
-      console.log("error", error);
+
       if (error) errorMessage = error.message || "Payment method creation failed";
 
       _paymentMethod = paymentMethod;
     }
-
-    console.log("clientSecret", clientSecret);
-    console.log("paymentMethod", _paymentMethod);
 
     if (_paymentMethod) {
       const response = await fetch(`${PUBLIC_CARDEN_API}/api/v4/stripe/test/pay`, {
@@ -129,8 +122,6 @@
       });
 
       const result = await response.json();
-
-      console.log("Payment result:", result);
     }
   }
 
@@ -189,14 +180,7 @@
 
         if (paymentMethod === "credit-card" && stripe) {
           const clientSecret = await createPaymentIntent(body.payload.id);
-
-          const paymentResult = await pay(clientSecret);
-
-          // await confirmCardPayment(clientSecret)
-          // const isPaid = await pay();
-          // if (!isPaid) {
-          //   return;
-          // }
+          await pay(clientSecret);
         }
 
         const slug = body.payload.slug;
@@ -253,24 +237,26 @@
 
         // 2️⃣ créer PaymentRequest pour Apple Pay
         const paymentRequest = stripe.paymentRequest({
-          country: "US",
-          currency: "usd",
+          country: "FR",
+          currency: "eur",
           total: { label: "Total", amount: finalPriceToPay },
           requestPayerName: true,
           requestPayerEmail: true,
         });
 
         const canPay = await paymentRequest.canMakePayment();
-        console.log("canPay", canPay);
+
         if (!canPay.applePay && !canPay.googlePay) return;
 
         const prButton = elements.create("paymentRequestButton", { paymentRequest });
         paymentRequest.on("paymentmethod", (detail) => {
-          console.log("checkoutPaymentMethod", detail);
           checkoutPaymentMethod = detail.paymentMethod;
-          detail.complete("success");
-          // Handle successful payment here
-          handleSubmit();
+          if (checkoutPaymentMethod) {
+            detail.complete("success");
+            handleSubmit();
+          } else {
+            detail.complete("fail");
+          }
         });
         prButton.mount("#apple-pay-button");
       }
@@ -334,29 +320,6 @@
       />
     </div>
 
-    <!-- <Elements {stripe}> -->
-    <!-- {#if paymentMethod === "credit-card"} -->
-    <!-- <div id="apple-pay-button"></div> -->
-    <!-- <div class=" bg-white py-3 px-2 rounded-lg"> -->
-    <!-- <CardNumber bind:element={cardElement} /> -->
-    <!-- </div> -->
-    <!-- <div class=" bg-white py-3 px-2 rounded-lg"><CardExpiry /></div> -->
-
-    <!-- <div class=" bg-white py-3 px-2 rounded-lg"><CardCvc /></div> -->
-    <!-- {/if} -->
-    <!-- </Elements> -->
-
-    <!-- <div
-      id="payment-element"
-      class="{expressCheckoutElementReady ? 'border border-gray-200 mb-2' : ''}  rounded-md"
-    ></div> -->
-    <!-- {#if stripe}
-      <Elements {stripe}>
-        <div class="wrapper">
-          <PaymentRequestButton {paymentRequest} on:paymentmethod={pay} />
-        </div>
-      </Elements>
-    {/if} -->
     <div id="apple-pay-button"></div>
     <div
       id="card-element"

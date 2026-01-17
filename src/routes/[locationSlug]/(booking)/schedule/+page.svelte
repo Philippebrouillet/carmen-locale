@@ -30,6 +30,7 @@
   let isOpenAfterOptions = false;
 
   const bookingMode: BookingMode = $location.config.booking_window;
+
   let bookingDelays = [
     { time: "5", haveWorkerAvailable: false },
     { time: "15", haveWorkerAvailable: false },
@@ -73,8 +74,34 @@
     return slots;
   };
 
-  const morningSlots = createSlotDate("8:00", "12:00");
-  const afternoonSlots = createSlotDate("12:00", "19:00");
+  let morningSlots: Date[] = [];
+  let afternoonSlots: Date[] = [];
+
+  const getTimeString = (date: Date): string => {
+    return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
+  };
+
+  $: if (bookingMode === "DAY") {
+    const soonerStartWorker = allWorkers.reduce((acc, w) => {
+      if (!acc || (w.startWorkerDate && w.startWorkerDate < acc)) {
+        return w.startWorkerDate;
+      }
+      return acc;
+    }, null);
+
+    const laterEndWorker = allWorkers.reduce((acc, w) => {
+      if (!acc || (w.endWorkerDate && w.endWorkerDate > acc)) {
+        return w.endWorkerDate;
+      }
+      return acc;
+    }, null);
+
+    const soonerStartWorkerTime = soonerStartWorker ? getTimeString(soonerStartWorker) : null;
+    const laterEndWorkerTime = laterEndWorker ? getTimeString(laterEndWorker) : null;
+
+    morningSlots = createSlotDate(soonerStartWorkerTime, "12:00");
+    afternoonSlots = createSlotDate("12:00", laterEndWorkerTime);
+  }
 
   const filterShowableWorkers = (workers, date) => {
     return workers.filter((w) => {
@@ -144,8 +171,8 @@
   // );
 
   $: $location, $clock, setShowableBookingDelays();
-
-  $: workers = filterShowableWorkers(computeQueue($location, new Date($clock), start), start);
+  $: allWorkers = computeQueue($location, new Date($clock), start);
+  $: workers = filterShowableWorkers(allWorkers, start);
 
   $: if (appointmentOptionSelected == false) {
     setBookingDate(today(getLocalTimeZone()).toDate(getLocalTimeZone()));

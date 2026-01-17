@@ -77,14 +77,21 @@
   .pulse-ring {
     animation: ring-pulse 2.2s ease-in-out infinite;
   }
-
   @keyframes ring-pulse {
     0% {
       transform: scale(1);
     }
 
-    50% {
+    35% {
+      transform: scale(1.07);
+    }
+
+    55% {
       transform: scale(1.03);
+    }
+
+    75% {
+      transform: scale(1.05);
     }
 
     100% {

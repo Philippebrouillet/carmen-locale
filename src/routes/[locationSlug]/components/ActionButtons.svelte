@@ -6,12 +6,14 @@
   import type { LocationInfo, LocationStatus, LocationTheme } from "$src/types/Location";
   import { ChevronRight, ExternalLink } from "lucide-svelte";
   import * as m from "$lib/paraglide/messages.js";
+  import { goto } from "$app/navigation";
+  import type { QueueInfo } from "$src/types/QueueLine";
 
   export let locationSlug: string;
   export let location: LocationInfo;
   export let locationStatus: LocationStatus;
   export let theme: LocationTheme;
-
+  export let workers: QueueInfo[];
   $: isDisabledProButton = locationStatus !== "open";
   $: isHiddenProButton = locationStatus === "closed" && location?.externalCalendarLink;
 
@@ -42,6 +44,15 @@
   >
     <a
       on:click={(e) => {
+        if (workers.filter((w) => w.formatedStatus === "available").length === 1) {
+          e.preventDefault();
+          goto(
+            location.id +
+              "/services/?workerFilter=" +
+              workers.filter((w) => w.formatedStatus === "available")[0].id,
+          );
+        }
+
         if (isDisabledProButton) {
           e.preventDefault();
         }

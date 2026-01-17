@@ -29,6 +29,7 @@
   import type { PopupType } from "$src/types/PopupInfos";
   import Popup from "$src/lib/components/popup/Popup.svelte";
   import PaymentForm from "./PaymentForm.svelte";
+  import { goto } from "$app/navigation";
 
   let paymentMode: LocationPaymentMode = $location.config.payment_mode;
 
@@ -73,6 +74,8 @@
   };
 
   onMount(async () => {
+    if (!$shopStore.bookingDate) goto("/" + $location.location.id);
+
     const stripeKey = PUBLIC_STRIPE_KEY;
     if (stripeKey) {
       stripe = await loadStripe(stripeKey);
@@ -80,6 +83,7 @@
   });
 
   $: bookingTime = $shopStore.bookingDate;
+
   $: selectedProfessional = $shopStore.selectedProfessional;
   $: selectedService = $shopStore.selectedService;
   $: theme = $location.location.theme;

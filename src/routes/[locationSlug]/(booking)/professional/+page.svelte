@@ -8,17 +8,12 @@
   import * as m from "$lib/paraglide/messages.js";
   import WorkerCardItem from "../components/WorkerCardItem.svelte";
   import { computeQueue } from "$src/services/QueueLine";
-  import { goto } from "$app/navigation";
 
   $: start = new Date(new Date($clock).getTime() + 5 * 60 * 1000);
   $: workers = computeQueue($location, new Date($clock), start).filter(
     (w) => w.formatedStatus !== "unavailable",
   );
   $: theme = $location.location.theme;
-
-  $: if (workers.filter((w) => w.formatedStatus === "available").length === 1) {
-    goto("services/?workerFilter=" + workers.filter((w) => w.formatedStatus === "available")[0].id);
-  }
 
   const randomIconBackGroundColorsByTheme = {
     NEUTRAL: "bg-[#F7F7F7]",

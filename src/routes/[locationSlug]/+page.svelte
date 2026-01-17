@@ -16,6 +16,7 @@
   import { onMount } from "svelte";
   import { resetShopStore } from "$src/lib/stores/basketStore";
   import ExternalLinks from "$src/lib/components/ExternalLinks.svelte";
+  import { goto, replaceState } from "$app/navigation";
 
   const locationSlug = $page.params.locationSlug;
   let location = $locationResponseApi.location;
@@ -33,9 +34,11 @@
 
   onMount(() => {
     resetShopStore();
-    const cleanUrl = new URL(window.location.href);
-    cleanUrl.search = ""; // vide tous les params
-    window.history.replaceState({}, "", cleanUrl.toString());
+    if ($page.url.searchParams.size > 0) {
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.search = "";
+      goto(cleanUrl.pathname, { replaceState: true });
+    }
   });
 </script>
 
@@ -68,7 +71,7 @@
           {location.name}
         </h2>
 
-        <ActionButtons {locationSlug} {location} {locationStatus} {theme} />
+        <ActionButtons {locationSlug} {location} {locationStatus} {theme} {workers} />
 
         <ExternalLinks {location} mode="desktop" />
       </div>
