@@ -261,7 +261,7 @@
         });
 
         const canPay = await paymentRequest.canMakePayment();
-
+        console.log("canPay", canPay);
         if (!canPay.applePay && !canPay.googlePay) return;
 
         const prButton = elements.create("paymentRequestButton", { paymentRequest });
