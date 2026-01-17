@@ -24,6 +24,7 @@
   import {
     loadStripe,
     type Stripe,
+    type StripeCardElement,
     type StripeCardNumberElement,
     type StripeElementBase,
   } from "@stripe/stripe-js";
@@ -33,10 +34,10 @@
 
   export let paymentMethod: PaymentMethod;
   export let finalPriceToPay: number;
-  let card;
+  let card: StripeCardElement;
   let disableButton = true;
   let cardElement: StripeElementBase | undefined = undefined;
-  let expressCheckoutElementReady = false;
+  let checkoutPaymentMethod: any = undefined;
   let stripe: Stripe | null = null;
   let now = new Date($clock);
   let workerId = $shopStore.selectedProfessional?.id;
@@ -52,13 +53,6 @@
   // let firstInfo = nextAvailableTime(workerTickets, now, firstStart);
   // let firstIsFree = firstInfo.isFirstSlot && !(rdv != null && firstInfo.createHole);
   let userExist: boolean | null = null;
-  const paymentRequest = {
-    country: "US",
-    currency: "usd",
-    total: { label: "Demo total", amount: 1099 },
-    requestPayerName: true,
-    requestPayerEmail: true,
-  };
 
   let formData: { name: string; phone: E164Number | null; email: string } = {
     name: "",
@@ -99,21 +93,29 @@
   }
 
   async function pay(clientSecret: { id: string }) {
-    if (!stripe || !cardElement || !clientSecret) {
+    if (!stripe || !clientSecret) {
       console.error("Stripe.js has not loaded yet.");
       return;
     }
 
-    const { paymentMethod, error } = await stripe.createPaymentMethod({
-      type: "card",
-      card: cardElement as StripeCardNumberElement,
-    });
+    let _paymentMethod = checkoutPaymentMethod;
 
-    console.log("cardElement", cardElement);
+    if (!_paymentMethod) {
+      console.log("Creating payment method from card element");
+      const { paymentMethod, error } = await stripe.createPaymentMethod({
+        type: "card",
+        card: card,
+      });
+      console.log("error", error);
+      if (error) errorMessage = error.message || "Payment method creation failed";
+
+      _paymentMethod = paymentMethod;
+    }
+
     console.log("clientSecret", clientSecret);
-    console.log("paymentMethod", paymentMethod);
+    console.log("paymentMethod", _paymentMethod);
 
-    if (paymentMethod) {
+    if (_paymentMethod) {
       const response = await fetch(`${PUBLIC_CARDEN_API}/api/v4/stripe/test/pay`, {
         method: "POST",
         credentials: "include",
@@ -122,7 +124,7 @@
         },
         body: JSON.stringify({
           paymentIntentId: clientSecret.id,
-          paymentMethodId: paymentMethod.id,
+          paymentMethodId: _paymentMethod.id,
         }),
       });
 
@@ -130,26 +132,6 @@
 
       console.log("Payment result:", result);
     }
-
-    // const paymentRequest: PaymentRequestOptions = {
-    //   country: "US",
-    //   currency: "usd",
-    //   total: { label: "Demo total", amount: 1099 },
-    //   requestPayerName: true,
-    //   requestPayerEmail: true,
-    // };
-    // const clientSecret = await createPaymentIntent();
-
-    // const result = await stripe.confirmCardPayment(clientSecret, {
-    //   payment_method: {
-    //     card: cardElement,
-    //     billing_details: {
-    //       name: userName,
-    //       email: email,
-    //       phone: phone,
-    //     },
-    //   },
-    // });
   }
 
   async function handleSubmit() {
@@ -201,7 +183,6 @@
           ticketOrigin: "WEB",
         }),
       });
-      isCreatingTicket = false;
 
       if (resp.ok) {
         const body = await resp.json();
@@ -221,6 +202,8 @@
         const slug = body.payload.slug;
         await goto(`/ticket/${slug}`);
       }
+
+      isCreatingTicket = false;
     } catch (err) {
       isCreatingTicket = false;
     }
@@ -258,8 +241,6 @@
         card = elements.create("card", { style, hidePostalCode: true });
         // Stripe injects an iframe into the DOM
 
-        card.mount("#card-element");
-
         card.on("change", function (event) {
           // Disable the Pay button if there are no card details in the Element
           disableButton = event.complete && !event.error ? false : true;
@@ -268,20 +249,26 @@
             : "";
         });
 
+        card.mount("#card-element");
+
         // 2️⃣ créer PaymentRequest pour Apple Pay
         const paymentRequest = stripe.paymentRequest({
           country: "US",
           currency: "usd",
-          total: { label: "Demo total", amount: 1099 },
+          total: { label: "Total", amount: finalPriceToPay },
           requestPayerName: true,
           requestPayerEmail: true,
         });
 
         const canPay = await paymentRequest.canMakePayment();
-        console.log("canPay", canPay);
-        if (!canPay) return;
+
+        if (!canPay.applePay && !canPay.googlePay) return;
 
         const prButton = elements.create("paymentRequestButton", { paymentRequest });
+        paymentRequest.on("paymentmethod", (e) => {
+          console.log("checkoutPaymentMethod", e);
+          checkoutPaymentMethod = e.detail.paymentMethod;
+        });
         prButton.mount("#apple-pay-button");
       }
     }
@@ -388,9 +375,15 @@
       <p class="text-red-500 text-sm">{errorMessage}</p>
     {/if}
 
-    <Button disabled={disableButton} type="submit" class="rounded-lg min-h-12 disabled:opacity-50"
-      >{isCreatingTicket ? "..." : m.makeReservation()}</Button
-    >
+    {#if isCreatingTicket}
+      <div class="flex items-center justify-center h-full">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    {:else}
+      <Button disabled={disableButton} type="submit" class="rounded-lg min-h-12 disabled:opacity-50"
+        >{isCreatingTicket ? "..." : m.makeReservation()}</Button
+      >
+    {/if}
     <div class="flex justify-center items-center">
       <p class="text-xs text-primary text-center max-w-[80%]">
         En cliquant sur le bouton ci-dessus,<br /> vous acceptez les
