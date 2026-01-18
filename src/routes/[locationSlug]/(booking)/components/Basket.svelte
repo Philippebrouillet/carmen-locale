@@ -34,7 +34,7 @@
   import { browser } from "$app/environment";
 
   let paymentMode: LocationPaymentMode = $location.config.payment_mode;
-  let isCreatingTicket = false;
+  let isCreatingTicket = true;
 
   $: minimumServiceFeeInCents = $location.config.minimum_service_fee; // 90 // 0.90
   $: accomptePrice =
@@ -140,7 +140,7 @@
               renderer: "svg",
               loop: true,
               autoplay: true,
-              path: "$lib/assets/json/loader.json",
+              path: "/loader.json",
             });
           });
         } else if (!isCreatingTicket && container.hasChildNodes()) {
@@ -156,11 +156,21 @@
 </script>
 
 <div
-  class="bg-black fixed inset-0 z-[99999999999999999999999] flex justify-center items-center {isCreatingTicket
+  class="bg-black fixed inset-0 z-[9999999] flex justify-center items-center {isCreatingTicket
     ? 'block'
     : 'hidden'}"
 >
-  <div id="loader" class="h-[200px]"></div>
+  <div class="flex flex-col">
+    <div id="loader" class="h-[200px]"></div>
+    <h3 class="text-white text-2xl font-bold">
+      Validation en cours
+      <span class="inline-flex ml-1">
+        <span class="dot">.</span>
+        <span class="dot">.</span>
+        <span class="dot">.</span>
+      </span>
+    </h3>
+  </div>
 </div>
 
 {#if selectedService && selectedProfessional}
@@ -461,3 +471,32 @@
 {/if}
 
 <Popup bind:popupTypeOpen />
+
+<style>
+  .dot {
+    opacity: 0;
+    animation: dotPulse 1.4s infinite;
+  }
+
+  .dot:nth-child(1) {
+    animation-delay: 0s;
+  }
+  .dot:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  .dot:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+
+  @keyframes dotPulse {
+    0% {
+      opacity: 0;
+    }
+    20% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+</style>
