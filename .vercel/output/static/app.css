@@ -1,0 +1,49 @@
+:root {
+  --background-black: rgb(49, 44, 44);
+  --form-control-color: black;
+
+  --color-green: #23bbac;
+  --color-blue: #1c5cff;
+  --color-gray: #69696b;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  /* font-family: Roboto, sans-serif; */
+}
+
+a {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+/** Colors helpers **/
+.bg-grey {
+  background-color: var(--color-gray);
+}
+.bg-blue {
+  background-color: var(--color-blue);
+}
+.bg-green {
+  background-color: var(--color-green);
+}
+
+.fg-grey {
+  color: var(--color-gray);
+}
+.fg-blue {
+  color: var(--color-blue);
+}
+.fg-green {
+  color: var(--color-green);
+}

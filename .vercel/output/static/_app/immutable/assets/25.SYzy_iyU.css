@@ -1,0 +1,1 @@
+.pulse-wrapper.svelte-l0thby{align-self:flex-start;position:relative}.pulse-ring.svelte-l0thby{position:absolute;top:0;right:0;bottom:0;left:0;border-radius:100%;animation:svelte-l0thby-pulse-border 2.3s ease-out infinite;pointer-events:none}@keyframes svelte-l0thby-pulse-border{0%{transform:scale(1);opacity:1}70%{transform:scale(2.2);opacity:0}to{opacity:0}}

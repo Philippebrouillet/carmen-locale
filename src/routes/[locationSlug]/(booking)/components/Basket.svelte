@@ -7,6 +7,7 @@
   // import type { CountryCode } from "svelte-tel-input/types";
   import * as Drawer from "$lib/components/ui/drawer";
   import BookingServiceBox from "./BookingServiceBox.svelte";
+  import CardenJsonLogo from "$lib/assets/json/loader.json";
 
   import { languageTag } from "$lib/paraglide/runtime";
   import lottie from "lottie-web";
@@ -140,7 +141,7 @@
               renderer: "svg",
               loop: true,
               autoplay: true,
-              path: "$lib/assets/json/loader.json",
+              path: "/loader.json",
             });
           });
         } else if (!isCreatingTicket && container.hasChildNodes()) {

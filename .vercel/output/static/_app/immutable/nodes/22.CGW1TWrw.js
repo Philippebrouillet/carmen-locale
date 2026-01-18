@@ -1,0 +1,1 @@
+import{P as r}from"../chunks/public.BeJSVsf1.js";import{r as t}from"../chunks/index.g5YcAAdQ.js";async function l({fetch:o}){let e=new URL(`${r}/logout`);o(e),t(302,"/pro/login")}const i=Object.freeze(Object.defineProperty({__proto__:null,load:l},Symbol.toStringTag,{value:"Module"}));export{i as universal};
