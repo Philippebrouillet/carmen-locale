@@ -34,7 +34,7 @@
   import { browser } from "$app/environment";
 
   let paymentMode: LocationPaymentMode = $location.config.payment_mode;
-  let isCreatingTicket = true;
+  let isCreatingTicket = false;
 
   $: minimumServiceFeeInCents = $location.config.minimum_service_fee; // 90 // 0.90
   $: accomptePrice =
