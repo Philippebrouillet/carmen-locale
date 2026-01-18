@@ -1,1 +1,0 @@
-import{l as s}from"./runtime.CTS-Dfby.js";const a=()=>"Sans préférence",o=()=>"بدون تفضيل",e=()=>"No preference",r=()=>"Sin preferencias",f=()=>"कोई वरीयता नहीं",i=()=>"Nessuna preferenza",t=()=>"Geen voorkeur",c=()=>"Sem preferência",l=()=>"Нет предпочтений",y=()=>"没有偏好",p=(P={},n={})=>({ar:o,en:e,es:r,fr:a,hi:f,it:i,nl:t,pt:c,ru:l,zh:y})[n.languageTag??s()]();export{p as a};
