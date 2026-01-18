@@ -3,7 +3,7 @@
   import SideSection from "$lib/components/SideSection.svelte";
   import { clock } from "$src/lib/stores/clock.svelte";
   import LocationHeader from "$src/routes/[locationSlug]/components/LocationHeader.svelte";
-  import { getLocationStatus, mainBackgroundColorByTheme } from "$src/services/Location";
+  import { getLocationStatus } from "$src/services/Location";
   import type { LocationInfoResp, LocationTheme, TicketInfo } from "$src/types/Location";
   import { computeQueue } from "$src/services/QueueLine";
   import OverviewSection from "./components/OverviewSection.svelte";
@@ -14,7 +14,7 @@
   import Popup from "$src/lib/components/popup/Popup.svelte";
   import type { PopupType } from "$src/types/PopupInfos";
   import { PUBLIC_CARDEN_API } from "$env/static/public";
-  import { goto } from "$app/navigation";
+
   import type { TicketStatus } from "$src/types/Ticket";
   import { displayPriceInDollars, displayWaitingTime } from "$src/lib/formater";
   import { Store } from "lucide-svelte";
@@ -253,7 +253,12 @@
   $: fullAddress = `${location.address}, ${location.zipCode}
         ${location.city}`;
   $: prestation = ticket.details.prestations[0];
-  $: leftToPay = ticket.details.left_to_pay;
+  $: allToPayOnPlace = !ticket.details.left_to_pay && !ticket.details.already_paid;
+  $: leftToPay = allToPayOnPlace
+    ? prestation.discountedPrice < prestation.price
+      ? prestation.discountedPrice
+      : prestation.price
+    : ticket.details.left_to_pay;
   $: isTicketGeneratedByClient = ticket.details.eticket;
 
   $: userTicketProgress,
@@ -283,6 +288,7 @@
     theme,
     timeWithLateTime,
     isExpectedTimeClose,
+    allToPayOnPlace,
   };
 
   const checkExpectedTimeClose = () => {

@@ -17,17 +17,20 @@
   export let theme: LocationTheme;
   export let timeWithLateTime: Date | null = null;
   export let isExpectedTimeClose: boolean = false;
+  export let allToPayOnPlace: boolean = false;
 
   $: ticketNumber = ticket.details.number;
   $: expectedTime = timeWithLateTime
     ? displayWaitingTime(timeWithLateTime)
     : displayWaitingTime(new Date(ticket.expectedTime));
 
-  const defaultStatusBadge: TicketPaymentType = !ticket.details.left_to_pay
-    ? "paid"
-    : ticket.details.already_paid > 0
-      ? "acompte_verse"
-      : "toPayOnPlace";
+  const defaultStatusBadge: TicketPaymentType = allToPayOnPlace
+    ? "toPayOnPlace"
+    : ticket.details.left_to_pay === 0
+      ? "paid"
+      : ticket.details.already_paid > 0
+        ? "acompte_verse"
+        : "toPayOnPlace";
 
   let badgePaymentStatus: TicketPaymentType = defaultStatusBadge;
 
