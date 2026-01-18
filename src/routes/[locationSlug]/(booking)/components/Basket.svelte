@@ -107,7 +107,6 @@
     paymentMode === "ONLINE_UPFRONT_FEE" || paymentMode === "ONLINE_FULL" ? true : false;
 
   const calculateFinalPrice = () => {
-    console.log("Calculating final price with paymentMode:", paymentMode);
     if (isOnlinePayment) {
       if (paymentMode === "ONLINE_UPFRONT_FEE") return feesWithAccompte;
       else {

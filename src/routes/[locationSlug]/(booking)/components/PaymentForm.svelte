@@ -69,6 +69,7 @@
   // let cardenFeeAccept = false;
 
   async function createPaymentIntent(ticketId: number) {
+    console.log("ticketId", ticketId);
     const response = await fetch(`${PUBLIC_CARDEN_API}/api/v3/stripe/test/payment-intent`, {
       method: "POST",
       credentials: "include",
@@ -76,7 +77,7 @@
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        ticketId,
+        ticketId: Number(ticketId),
         clientChoice:
           $location.config.payment_mode === "CLIENT_CHOICE"
             ? paymentMethod === "credit-card"
@@ -243,12 +244,16 @@
           requestPayerName: true,
           requestPayerEmail: true,
         });
-
+        if (!paymentRequest) {
+          console.error("Payment Request creation failed");
+          return;
+        }
         const canPay = await paymentRequest.canMakePayment();
-
-        if (!canPay.applePay && !canPay.googlePay) return;
+        console.log("canPay", canPay);
+        if (!canPay || (!canPay.applePay && !canPay.googlePay)) return;
 
         const prButton = elements.create("paymentRequestButton", { paymentRequest });
+
         paymentRequest.on("paymentmethod", (detail) => {
           checkoutPaymentMethod = detail.paymentMethod;
           if (checkoutPaymentMethod) {
@@ -323,7 +328,7 @@
     <div id="apple-pay-button"></div>
     <div
       id="card-element"
-      class="w-full h-11 px-3 py-3 rounded-t-lg bg-white border border-gray-200"
+      class="w-full h-11 px-3 py-3 rounded-lg bg-white border border-gray-200"
     ></div>
 
     <div class="flex flex-row justify-between">
