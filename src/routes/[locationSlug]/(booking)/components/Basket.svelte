@@ -32,6 +32,7 @@
   import PaymentForm from "./PaymentForm.svelte";
   import { goto } from "$app/navigation";
   import { browser } from "$app/environment";
+  import { scale } from "svelte/transition";
 
   let paymentMode: LocationPaymentMode = $location.config.payment_mode;
   let isCreatingTicket = false;
@@ -86,7 +87,6 @@
   });
 
   $: bookingTime = $shopStore.bookingDate;
-
   $: selectedProfessional = $shopStore.selectedProfessional;
   $: selectedService = $shopStore.selectedService;
   $: theme = $location.location.theme;
@@ -199,10 +199,12 @@
               </p>
 
               <p class="text-lg">
-                {bookingTime?.toLocaleTimeString(languageTag(), {
-                  hour: "numeric",
-                  minute: "numeric",
-                })}
+                {bookingTime
+                  ? bookingTime?.toLocaleTimeString(languageTag(), {
+                      hour: "numeric",
+                      minute: "numeric",
+                    })
+                  : ""}
               </p>
             </div>
           </div>
