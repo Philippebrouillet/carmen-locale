@@ -159,7 +159,7 @@
     ? 'block'
     : 'hidden'}"
 >
-  <div class="flex flex-col">
+  <div class="flex flex-col justify-center">
     <div id="loader" class="h-[200px]"></div>
     <h3 class="text-white text-2xl font-bold">
       Validation en cours
