@@ -128,7 +128,6 @@
     (finalPriceToPay = calculateFinalPrice());
 
   const setLottieLoader = () => {
-    console.log("isCreatingTicket", isCreatingTicket);
     if (browser) {
       const container = document.getElementById("loader");
       if (container) {
@@ -141,7 +140,7 @@
               renderer: "svg",
               loop: true,
               autoplay: true,
-              path: "/src/lib/assets/json/loader.json",
+              path: "$lib/assets/json/loader.json",
             });
           });
         } else if (!isCreatingTicket && container.hasChildNodes()) {
