@@ -285,7 +285,7 @@
 </script>
 
 <div
-  class="flex flex-col p-4 pt-4 lg:p-8 gap-6 w-full overflow-y-auto max-h-screen md:h-[80vh] bg-[#F8FAFD]"
+  class="flex flex-col p-4 pt-4 lg:p-8 gap-6 w-full overflow-y-auto min-h-screen h-full md:h-[80vh] bg-[#F8FAFD]"
 >
   <div class="flex flex-row justify-between">
     <!-- <h1 class="font-bold text-2xl">{m.confirmBooking()}</h1> -->
