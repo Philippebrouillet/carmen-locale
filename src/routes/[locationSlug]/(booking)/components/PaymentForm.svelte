@@ -34,7 +34,7 @@
   export let isCreatingTicket: boolean = false;
 
   let card: StripeCardElement;
-  let disableButton = true;
+  let disableButton = paymentMethod === "credit-card" ? true : false;
   let checkoutPaymentMethod: PaymentMethod | undefined = undefined;
   let stripe: Stripe | null = null;
   let now = new Date($clock);
@@ -69,7 +69,6 @@
   // let cardenFeeAccept = false;
 
   async function createPaymentIntent(ticketId: number) {
-    console.log("ticketId", ticketId);
     const response = await fetch(`${PUBLIC_CARDEN_API}/api/v4/stripe/test/payment-intent`, {
       method: "POST",
       headers: {
@@ -249,7 +248,7 @@
           return;
         }
         const canPay = await paymentRequest.canMakePayment();
-        console.log("canPay", canPay);
+
         if (!canPay || (!canPay.applePay && !canPay.googlePay)) return;
 
         const prButton = elements.create("paymentRequestButton", { paymentRequest });
@@ -324,12 +323,13 @@
         bind:value={formData.email}
       />
     </div>
-
-    <div id="apple-pay-button"></div>
-    <div
-      id="card-element"
-      class="w-full h-11 px-3 py-3 rounded-lg bg-white border border-gray-200"
-    ></div>
+    {#if paymentMethod === "credit-card"}
+      <div id="apple-pay-button"></div>
+      <div
+        id="card-element"
+        class="w-full h-11 px-3 py-3 rounded-lg bg-white border border-gray-200"
+      ></div>
+    {/if}
 
     <div class="flex flex-row justify-between">
       <div class="flex flex-col">

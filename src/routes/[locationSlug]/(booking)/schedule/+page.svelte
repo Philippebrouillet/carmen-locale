@@ -195,7 +195,7 @@
   //   console.log("Selected date : ", selectedDay);
   // }
 
-  $: bookingDelayBg = backgroundColorByTheme[$location.location.theme];
+  $: bgByTheme = backgroundColorByTheme[$location.location.theme];
 </script>
 
 <main class="w-full flex flex-col items-center md:items-start px-4">
@@ -225,7 +225,7 @@
               }}
               class="flex gap-2 justify-between disabled:opacity-30 disabled:cursor-not-allowed p-3 border rounded-xl transition-all duration-200 ease-in-out font-bold h-[69px] {bookingDelay ==
               delay.time
-                ? `${bookingDelayBg} text-primary-foreground `
+                ? `${bgByTheme} text-primary-foreground `
                 : 'bg-white hover:bg-gray-100'}  "
             >
               {numberDelay >= 60
@@ -265,16 +265,16 @@
               transition:slide={{ duration: 300 }}
               class="flex flex-col gap-4 w-full py-6 pt-2 px-4 pb-4"
             >
-              <TimeFilterTabs bind:selectedTimeFilter />
+              <TimeFilterTabs bind:selectedTimeFilter {bgByTheme} />
               <div class="grid grid-cols-3 md:grid-cols-6 w-full gap-4">
                 {#each afterSlots as value}
                   {@const stringValue = value.date.getTime().toString()}
                   {@const isSelectedTime = selectedTime == stringValue}
                   <button
                     disabled={value.date.getTime() <= now.getTime() || !value.haveWorkerAvailable}
-                    class="w-full p-2 text-sm border rounded-lg transition-all duration-200 ease-in-out hover:bg-gray-100 hover:text-primary disabled:opacity-10"
-                    class:bg-primary={isSelectedTime}
-                    class:text-primary-foreground={isSelectedTime}
+                    class="w-full p-2 text-sm border rounded-lg transition-all duration-200 ease-in-out hover:bg-gray-100 hover:text-primary disabled:opacity-10 {isSelectedTime
+                      ? `${bgByTheme} text-primary-foreground `
+                      : 'bg-white'}"
                     on:click={() => {
                       selectedTime = stringValue;
                       setBookingDate(value.date);

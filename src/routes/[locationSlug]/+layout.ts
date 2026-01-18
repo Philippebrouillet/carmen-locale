@@ -11,7 +11,7 @@ export async function load({ fetch, params }) {
     const json = await resp.json();
 
     const configJson = await configResp.json();
-    console.log("configJson", configJson);
+
     return { ...formatLocationResponse(json), config: configJson.config };
   }
   if (resp.status == 404) {

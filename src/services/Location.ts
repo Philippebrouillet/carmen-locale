@@ -93,7 +93,8 @@ export const formatLocationResponse = (locationResp: any) => {
     services: locationResp.location.catalog ?? [],
     workers: workers,
     planning: [],
+    config: locationResp.config,
   };
-  console.log("locationInfo", locationInfo);
+
   return locationInfo;
 };

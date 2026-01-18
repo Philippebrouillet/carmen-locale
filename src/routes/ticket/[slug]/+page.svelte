@@ -22,7 +22,7 @@
   import { onDestroy, onMount } from "svelte";
 
   export let data;
-  $: console.log("data", data);
+
   const locationSlug = data.location.location.id;
 
   let ticket = data.ticket;
@@ -148,7 +148,6 @@
     const parsedData = JSON.parse(event.data);
 
     if (parsedData.type === "sync") {
-      console.log("parsedData", parsedData);
       const queueLines = parsedData.queueLines;
       const tickets = queueLines.flatMap((item) => item.tickets);
       const newTicketData = tickets.find((item) => item.id === ticket.id);
@@ -181,7 +180,7 @@
         ticket = newTicketData;
         ticket = ticket;
       }
-      console.log("otherTicketsOnLocation", otherTicketsOnLocation);
+
       if (otherTicketsOnLocation.length) {
         const newQueueLen = [];
 
@@ -378,6 +377,7 @@
           ticketModules={data.queueInfo.ticketModules}
           {ticket}
           googlePlaceId={data.config.google_place_id}
+          satisfactionLink={data.config.satisfaction_survey_link}
         />
       {/if}
 

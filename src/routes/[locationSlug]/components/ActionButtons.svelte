@@ -44,13 +44,12 @@
   >
     <a
       on:click={(e) => {
-        if (workers.filter((w) => w.formatedStatus === "available").length === 1) {
+        const availableWorkers = workers.filter((w) =>
+          ["available", "waiting"].includes(w.formatedStatus),
+        );
+        if (availableWorkers.length === 1) {
           e.preventDefault();
-          goto(
-            location.id +
-              "/services/?workerFilter=" +
-              workers.filter((w) => w.formatedStatus === "available")[0].id,
-          );
+          goto(location.id + "/services/?workerFilter=" + availableWorkers[0].id);
         }
 
         if (isDisabledProButton) {

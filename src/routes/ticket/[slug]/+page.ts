@@ -9,7 +9,6 @@ export async function load({ params, fetch }) {
 
   if (resp.ok) {
     ticket = await resp.json();
-    console.log("ticket", ticket);
   } else return error(404, "Not found");
 
   const locationResponse = await fetch(

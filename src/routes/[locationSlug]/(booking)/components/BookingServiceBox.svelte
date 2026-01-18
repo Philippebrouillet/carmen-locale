@@ -53,13 +53,12 @@
 
       <div class="w-full border-t bg-[#DFE5E7]"></div>
 
-      <p
+      <button
+        on:click={() => openPopupInfo("HOURS")}
         class="text-[#616163] text-sm flex gap-1 items-center underline underline-offset-4 decoration-dashed decoration-[#DFE5E7]"
       >
-        Heure de passage estimée <button on:click={() => openPopupInfo("HOURS")}
-          ><InfoIcon size={12} /></button
-        >
-      </p>
+        Heure de passage estimée <span><InfoIcon size={12} /></span>
+      </button>
     </div>
   </div>
 </div>

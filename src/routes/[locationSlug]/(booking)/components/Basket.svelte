@@ -7,7 +7,6 @@
   // import type { CountryCode } from "svelte-tel-input/types";
   import * as Drawer from "$lib/components/ui/drawer";
   import BookingServiceBox from "./BookingServiceBox.svelte";
-  import CardenJsonLogo from "$lib/assets/json/loader.json";
 
   import { languageTag } from "$lib/paraglide/runtime";
   import lottie from "lottie-web";
@@ -141,7 +140,7 @@
               renderer: "svg",
               loop: true,
               autoplay: true,
-              path: "/loader.json",
+              path: "$lib/assets/json/loader.json",
             });
           });
         } else if (!isCreatingTicket && container.hasChildNodes()) {
@@ -220,17 +219,18 @@
                   ? 'bg-[#7832DC] bg-opacity-15'
                   : 'bg-[#23BBAC] bg-opacity-20'}"
               >
-                <p class="flex gap-1.5 items-center">
+                <button
+                  on:click={() => {
+                    const type = isSuperiorDiscounted ? "MAJORATION" : "REDUCTIONWITHDISCOUNT";
+                    openPopupInfo(type);
+                  }}
+                  class="flex gap-1.5 items-center"
+                >
                   {isSuperiorDiscounted ? m.surcharge() : m.discount()}
-                  <button
-                    on:click={() => {
-                      const type = isSuperiorDiscounted ? "MAJORATION" : "REDUCTIONWITHDISCOUNT";
-                      openPopupInfo(type);
-                    }}
-                  >
+                  <span>
                     <InfoIcon size={12} />
-                  </button>
-                </p>
+                  </span>
+                </button>
                 <p
                   class="flex gap-1.5 items-center {isSuperiorDiscounted
                     ? 'text-[#7832DC]'
@@ -260,15 +260,14 @@
               <div
                 class="flex justify-between items-center font-normal text-sm text-[#616163] px-6 md:px-8"
               >
-                <p
+                <button
+                  on:click={() => {
+                    openPopupInfo(isDefaultFees ? "FEES90" : "FEES30");
+                  }}
                   class="flex gap-1.5 items-center underline underline-offset-4 decoration-dashed decoration-[#DFE5E7]"
                 >
-                  Frais de service <button
-                    on:click={() => {
-                      openPopupInfo(isDefaultFees ? "FEES90" : "FEES30");
-                    }}><InfoIcon size={12} /></button
-                  >
-                </p>
+                  Frais de service <span><InfoIcon size={12} /></span>
+                </button>
                 <p>{displayPriceInDollars(finalCardenFees)}</p>
               </div>
             {/if}
@@ -294,15 +293,16 @@
             {#if paymentMode === "ONLINE_UPFRONT_FEE"}
               <div class="py-2 {backgroundColorFeeByTheme[theme]} bg-opacity-30 px-6 md:px-8">
                 <div class="flex justify-between items-center text-primary font-bold text-sm">
-                  <p class="text-primary flex items-center gap-1.5">
+                  <button
+                    on:click={() => {
+                      openPopupInfo("ACOMPTE");
+                    }}
+                    class="text-primary flex items-center gap-1.5"
+                  >
                     <Wallet class={iconColor} size={18} />
                     <span class="font-bold">{m.acompte()} + {m.frais()}</span>
-                    <button
-                      on:click={() => {
-                        openPopupInfo("ACOMPTE");
-                      }}><InfoIcon class={iconColor} size={12} /></button
-                    >
-                  </p>
+                    <span><InfoIcon class={iconColor} size={12} /></span>
+                  </button>
                   <p class="text-lg">
                     {displayPriceInDollars(finalCardenFees + accomptePrice)}
                   </p>

@@ -13,7 +13,6 @@
   $: mapSrc = `https://www.google.com/maps?q=${query}&output=embed&retry=${retry}`;
 
   function handleError() {
-    console.log("Map load error, retrying...", retry);
     if (retry < MAX_RETRY) {
       retry += 1;
     }

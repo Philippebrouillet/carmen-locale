@@ -142,9 +142,6 @@ export function nextAvailableTime(
   let isFirstSlot = true;
 
   if (withTime.length == 0) {
-    // if (worker?.name === "Benjamin") {
-    //   console.log("al?");
-    // }
     return { ticketBefore, next: start, isFirstSlot, createHole: now.getTime() < start.getTime() };
   }
 
@@ -183,10 +180,6 @@ export function nextAvailableTime(
 
   const last = withTime[tickets.length - 1];
   const next = new Date(last.time.getTime() + last.durationS * 1000);
-  // if (worker?.name === "Augustin") {
-  //   console.log("last", start);
-  //   console.log("next", next);
-  // }
 
   // ticket is late
   if (start.getTime() > next.getTime()) {
@@ -260,10 +253,6 @@ const getWorkerFormatedStatus = (
     status = "unavailable";
     return status;
   }
-
-  // if (worker.name === "Benjamin") {
-  //   console.log("isLate", isLate);
-  // }
 
   if (isLate && ticketBefore > 0) {
     status = "waiting";

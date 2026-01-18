@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
   import type { LocationInfo, TicketInfo } from "$src/types/Location";
 
   export let ticket: TicketInfo;
   export let location: LocationInfo;
   export let ticketModules: any;
   export let googlePlaceId: string | null = null;
+  export let satisfactionLink: string | null = null;
   let selectedStars = 0;
 </script>
 
@@ -23,17 +23,21 @@
 
           if (selectedStars > 3) {
             window.open(
-              "https://search.google.com/local/writereview?placeid=" + googlePlaceId ||
-                "ChIJwQ4iCehx5kcRpmDUrceh7ao",
+              "https://search.google.com/local/writereview?placeid=" +
+                (googlePlaceId || "ChIJwQ4iCehx5kcRpmDUrceh7ao"),
               "_blank",
             );
           } else {
-            const newUrl = new URL("https://tally.so/r/WOEgWJ");
-            newUrl.searchParams.set("rating", String(selectedStars));
-            newUrl.searchParams.set("locationName", location.name);
-            newUrl.searchParams.set("ticketId", String(ticket.id));
-            newUrl.searchParams.set("locationId", String(location.id));
-            window.open(newUrl.toString(), "_blank");
+            if (satisfactionLink) {
+              window.open(satisfactionLink, "_blank");
+            } else {
+              const newUrl = new URL("https://tally.so/r/WOEgWJ");
+              newUrl.searchParams.set("rating", String(selectedStars));
+              newUrl.searchParams.set("locationName", location.name);
+              newUrl.searchParams.set("ticketId", String(ticket.id));
+              newUrl.searchParams.set("locationId", String(location.id));
+              window.open(newUrl.toString(), "_blank");
+            }
           }
         }}
         class="text-2xl transition-colors"
