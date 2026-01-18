@@ -254,9 +254,8 @@
   $: fullAddress = `${location.address}, ${location.zipCode}
         ${location.city}`;
   $: prestation = ticket.details.prestations[0];
-  $: console.log("ticket ", ticket);
+  $: leftToPay = ticket.details.left_to_pay;
   $: isTicketGeneratedByClient = ticket.details.eticket;
-  $: isTicketGeneratedByPro = !isTicketGeneratedByClient;
 
   $: userTicketProgress,
     nextUserTicketProgress,
@@ -280,7 +279,6 @@
     ticketStatus,
     ticket,
     prestation,
-    isTicketGeneratedByPro,
     isTicketGeneratedByClient,
     isCancelledOrProAbsent,
     theme,
@@ -439,16 +437,14 @@
         />
       {/if}
 
-      <!-- Prestation section -->
-      {#if prestation && !isCancelledOrProAbsent}
+      <!-- left to pay section -->
+      {#if leftToPay && !isCancelledOrProAbsent}
         <div class="bg-white p-4 flex items-center rounded-2xl shadow-sm -mt-2">
           <div class="flex justify-between gap-2 w-full font-bold text-sm text-primary">
             <div class="flex gap-2">
               <Store size="18" /><span class="">Reste à payer sur place</span>
             </div>
-            {displayPriceInDollars(
-              prestation.discountedPrice ? prestation.discountedPrice : prestation.price,
-            )}
+            {displayPriceInDollars(leftToPay)}
           </div>
         </div>
       {/if}

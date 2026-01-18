@@ -9,6 +9,7 @@
   import BookingServiceBox from "./BookingServiceBox.svelte";
 
   import { languageTag } from "$lib/paraglide/runtime";
+  import lottie from "lottie-web";
   import * as m from "$lib/paraglide/messages.js";
 
   import { shopStore } from "$lib/stores/basketStore";
@@ -30,8 +31,10 @@
   import Popup from "$src/lib/components/popup/Popup.svelte";
   import PaymentForm from "./PaymentForm.svelte";
   import { goto } from "$app/navigation";
+  import { browser } from "$app/environment";
 
   let paymentMode: LocationPaymentMode = $location.config.payment_mode;
+  let isCreatingTicket = false;
 
   $: minimumServiceFeeInCents = $location.config.minimum_service_fee; // 90 // 0.90
   $: accomptePrice =
@@ -123,7 +126,43 @@
     isOnlinePayment,
     priceWithDiscountPrice,
     (finalPriceToPay = calculateFinalPrice());
+
+  const setLottieLoader = () => {
+    console.log("isCreatingTicket", isCreatingTicket);
+    if (browser) {
+      const container = document.getElementById("loader");
+      if (container) {
+        if (isCreatingTicket && !container.hasChildNodes()) {
+          setTimeout(() => {
+            const drawer = document.querySelector('[data-vaul-drawer-visible="true"]');
+            drawer?.classList.add("hidden");
+            lottie.loadAnimation({
+              container: container,
+              renderer: "svg",
+              loop: true,
+              autoplay: true,
+              path: "/src/lib/assets/json/loader.json",
+            });
+          });
+        } else if (!isCreatingTicket && container.hasChildNodes()) {
+          const drawer = document.querySelector('[data-vaul-drawer-visible="false"]');
+          drawer?.classList.remove("hidden");
+          lottie.destroy("loader");
+        }
+      }
+    }
+  };
+
+  $: isCreatingTicket, setLottieLoader();
 </script>
+
+<div
+  class="bg-black fixed inset-0 z-[99999999999999999999999] flex justify-center items-center {isCreatingTicket
+    ? 'block'
+    : 'hidden'}"
+>
+  <div id="loader" class="h-[200px]"></div>
+</div>
 
 {#if selectedService && selectedProfessional}
   <div class="flex">
@@ -409,8 +448,8 @@
       </div>
 
       <Drawer.Root bind:open={isPaymentPopupOpen}>
-        <Drawer.Content class=" z-[120] lg:w-1/2 h-full">
-          <PaymentForm {paymentMethod} {finalPriceToPay} />
+        <Drawer.Content class=" z-[120] lg:w-1/2 h-full {isCreatingTicket ? 'hidden' : 'block'}">
+          <PaymentForm {paymentMethod} {finalPriceToPay} bind:isCreatingTicket />
         </Drawer.Content>
       </Drawer.Root>
     </div>

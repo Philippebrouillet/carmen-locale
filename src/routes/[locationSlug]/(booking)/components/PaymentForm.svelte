@@ -31,6 +31,7 @@
 
   export let paymentMethod: LocationPaymentMethod;
   export let finalPriceToPay: number;
+  export let isCreatingTicket: boolean = false;
 
   let card: StripeCardElement;
   let disableButton = true;
@@ -58,7 +59,6 @@
   };
   let phoneValid = true;
   let selectedCountry: CountryCode = "FR";
-  let isCreatingTicket = false;
   let errorMessage = "";
 
   function isValidEmail(email: string): boolean {
@@ -70,9 +70,8 @@
 
   async function createPaymentIntent(ticketId: number) {
     console.log("ticketId", ticketId);
-    const response = await fetch(`${PUBLIC_CARDEN_API}/api/v3/stripe/test/payment-intent`, {
+    const response = await fetch(`${PUBLIC_CARDEN_API}/api/v4/stripe/test/payment-intent`, {
       method: "POST",
-      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
@@ -158,6 +157,7 @@
     }
 
     isCreatingTicket = true;
+
     try {
       const resp = await fetch(`${PUBLIC_CARDEN_API}/api/v2/ticket`, {
         method: "POST",

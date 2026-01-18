@@ -9,7 +9,6 @@
   import { Bell, Clock3, Dock, InfoIcon, Store, Wallet } from "lucide-svelte";
 
   export let ticket;
-  export let isTicketGeneratedByPro;
   export let isTicketGeneratedByClient;
   export let prestation;
   export let ticketStatus: TicketStatus;
@@ -24,7 +23,11 @@
     ? displayWaitingTime(timeWithLateTime)
     : displayWaitingTime(new Date(ticket.expectedTime));
 
-  const defaultStatusBadge: TicketPaymentType = "toPayOnPlace";
+  const defaultStatusBadge: TicketPaymentType = !ticket.details.left_to_pay
+    ? "paid"
+    : ticket.details.already_paid > 0
+      ? "acompte_verse"
+      : "toPayOnPlace";
 
   let badgePaymentStatus: TicketPaymentType = defaultStatusBadge;
 

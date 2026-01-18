@@ -53,8 +53,11 @@
     return { hour: parseInt(hourStr, 10), minutes: parseInt(minuteStr || "0", 10) };
   };
 
-  const createSlotDate = (start: string, end: string): Date[] => {
-    const slots: Date[] = [];
+  const createSlotDate = (
+    start: string,
+    end: string,
+  ): { date: Date; haveWorkerAvailable: boolean }[] => {
+    const slots: { date: Date; haveWorkerAvailable: boolean }[] = [];
     const { hour: startHour, minutes: startMinutes } = parseTimeString(start);
     const { hour: endHour, minutes: endMinutes } = parseTimeString(end);
 
@@ -67,15 +70,15 @@
 
         const date = new Date();
         date.setHours(hour, minutes, 0, 0);
-        slots.push(date);
+        slots.push({ date, haveWorkerAvailable: haveWorkerAvailableForDate(date) });
       }
     }
 
     return slots;
   };
 
-  let morningSlots: Date[] = [];
-  let afternoonSlots: Date[] = [];
+  let morningSlots: { date: Date; haveWorkerAvailable: boolean }[] = [];
+  let afternoonSlots: { date: Date; haveWorkerAvailable: boolean }[] = [];
 
   const getTimeString = (date: Date): string => {
     return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
@@ -116,15 +119,18 @@
     });
   };
 
+  const haveWorkerAvailableForDate = (date: Date) => {
+    const haveWorkerAvailable = filterShowableWorkers(
+      computeQueue($location, new Date($clock), date),
+      date,
+    );
+    return haveWorkerAvailable.length > 0 ? true : false;
+  };
+
   const setShowableBookingDelays = () => {
     for (const delay of bookingDelays) {
-      const start = new Date(now.getTime() + Number(delay.time) * 60000);
-      const haveWorkerAvailable = filterShowableWorkers(
-        computeQueue($location, new Date($clock), start),
-        start,
-      );
-
-      delay.haveWorkerAvailable = haveWorkerAvailable.length > 0 ? true : false;
+      const date = new Date(now.getTime() + Number(delay.time) * 60000);
+      delay.haveWorkerAvailable = haveWorkerAvailableForDate(date);
     }
     bookingDelays = bookingDelays;
   };
@@ -262,20 +268,20 @@
               <TimeFilterTabs bind:selectedTimeFilter />
               <div class="grid grid-cols-3 md:grid-cols-6 w-full gap-4">
                 {#each afterSlots as value}
-                  {@const stringValue = value.getTime().toString()}
+                  {@const stringValue = value.date.getTime().toString()}
                   {@const isSelectedTime = selectedTime == stringValue}
                   <button
-                    disabled={value.getTime() <= now.getTime()}
+                    disabled={value.date.getTime() <= now.getTime() || !value.haveWorkerAvailable}
                     class="w-full p-2 text-sm border rounded-lg transition-all duration-200 ease-in-out hover:bg-gray-100 hover:text-primary disabled:opacity-10"
                     class:bg-primary={isSelectedTime}
                     class:text-primary-foreground={isSelectedTime}
                     on:click={() => {
                       selectedTime = stringValue;
-                      setBookingDate(value);
+                      setBookingDate(value.date);
                       setBookingDelay(0);
                     }}
                   >
-                    {value.toLocaleTimeString(languageTag(), { timeStyle: "short" })}
+                    {value.date.toLocaleTimeString(languageTag(), { timeStyle: "short" })}
                   </button>
                 {/each}
               </div>
