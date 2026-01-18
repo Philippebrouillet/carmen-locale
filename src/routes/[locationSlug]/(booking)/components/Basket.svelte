@@ -161,7 +161,7 @@
 >
   <div class="flex flex-col justify-center">
     <div id="loader" class="h-[200px]"></div>
-    <h3 class="text-white text-2xl font-bold">
+    <h3 class="text-white text-2xl font-bold text-center">
       Validation en cours
       <span class="inline-flex ml-1">
         <span class="dot">.</span>
