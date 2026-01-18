@@ -34,7 +34,8 @@
   export let isCreatingTicket: boolean = false;
 
   let card: StripeCardElement;
-  let disableButton = paymentMethod === "credit-card" ? true : false;
+  let disableButton = true;
+  let isCardElementCompleted = false;
   let checkoutPaymentMethod: PaymentMethod | undefined = undefined;
   let stripe: Stripe | null = null;
   let now = new Date($clock);
@@ -42,6 +43,7 @@
   let servicesId = $shopStore.selectedService?.id;
   let rdv = $shopStore.bookingType == "appointment" ? true : false;
   let delay = $shopStore.bookingDelay;
+  let checkoutPaymentAvailable = false;
   // let services = $location.services.filter((s) => servicesId.includes(s.id.toString()));
   let worker = $location.workers.find((w) => w.id.toString() === workerId?.toString());
   let workerTickets =
@@ -227,7 +229,7 @@
 
         card.on("change", function (event) {
           // Disable the Pay button if there are no card details in the Element
-          disableButton = event.complete && !event.error ? false : true;
+          isCardElementCompleted = event.complete && !event.error ? true : false;
           document.querySelector("#card-error").textContent = event.error
             ? event.error.message
             : "";
@@ -250,6 +252,7 @@
         const canPay = await paymentRequest.canMakePayment();
 
         if (!canPay || (!canPay.applePay && !canPay.googlePay)) return;
+        checkoutPaymentAvailable = true;
 
         const prButton = elements.create("paymentRequestButton", { paymentRequest });
 
@@ -281,6 +284,16 @@
   // $: finalPrice = $shopStore.selectedService?.discountedPrice
   //   ? $shopStore.selectedService.discountedPrice + ($shopStore.cardenFee || 0)
   //   : ($shopStore.selectedService?.price || 0) + ($shopStore.cardenFee || 0);
+
+  const setDisableButton = () => {
+    if (paymentMethod === "credit-card") {
+      disableButton = isCardElementCompleted && isValidForm ? false : true;
+    } else {
+      disableButton = isValidForm ? false : true;
+    }
+  };
+  $: isValidForm = formData.name.trim() !== "" && phoneValid && isValidEmail(formData.email);
+  $: isCardElementCompleted, isValidForm, setDisableButton();
 </script>
 
 <div
@@ -323,13 +336,6 @@
         bind:value={formData.email}
       />
     </div>
-    {#if paymentMethod === "credit-card"}
-      <div id="apple-pay-button"></div>
-      <div
-        id="card-element"
-        class="w-full h-11 px-3 py-3 rounded-lg bg-white border border-gray-200"
-      ></div>
-    {/if}
 
     <div class="flex flex-row justify-between">
       <div class="flex flex-col">
@@ -344,6 +350,19 @@
     <p id="card-error" role="alert" class="pt-2 font-bold text-red-500 text-center text-sm"></p>
     {#if errorMessage}
       <p class="text-red-500 text-sm">{errorMessage}</p>
+    {/if}
+
+    {#if paymentMethod === "credit-card"}
+      <div class="flex flex-col gap-3">
+        <div id="apple-pay-button"></div>
+        {#if checkoutPaymentAvailable}
+          <p class="text-center">Ou payer par carte</p>
+        {/if}
+        <div
+          id="card-element"
+          class="w-full h-11 px-3 py-3 rounded-lg bg-white border border-gray-200"
+        ></div>
+      </div>
     {/if}
 
     {#if isCreatingTicket}

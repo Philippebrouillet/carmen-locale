@@ -32,7 +32,6 @@
   import PaymentForm from "./PaymentForm.svelte";
   import { goto } from "$app/navigation";
   import { browser } from "$app/environment";
-  import { scale } from "svelte/transition";
 
   let paymentMode: LocationPaymentMode = $location.config.payment_mode;
   let isCreatingTicket = false;
