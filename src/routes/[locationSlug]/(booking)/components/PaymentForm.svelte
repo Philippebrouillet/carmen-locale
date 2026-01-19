@@ -237,6 +237,18 @@
 
         card.mount("#card-element");
 
+        card.on("focus", () => {
+          const el = document.getElementById("card-element");
+          if (!el) return;
+
+          setTimeout(() => {
+            el.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            });
+          }, 300); // délai pour laisser le clavier apparaître
+        });
+
         // 2️⃣ créer PaymentRequest pour Apple Pay
         const paymentRequest = stripe.paymentRequest({
           country: "FR",
