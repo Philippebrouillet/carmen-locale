@@ -32,7 +32,7 @@
   export let paymentMethod: LocationPaymentMethod;
   export let finalPriceToPay: number;
   export let isCreatingTicket: boolean = false;
-
+  let drawerContent: HTMLElement;
   let card: StripeCardElement;
   let disableButton = true;
   let isCardElementCompleted = false;
@@ -237,17 +237,20 @@
 
         card.mount("#card-element");
 
-        card.on("focus", () => {
-          const el = document.getElementById("card-element");
-          if (!el) return;
+        // card.on("focus", () => {
+        //   const el = document.getElementById("card-element");
+        //   if (!el) return;
 
-          setTimeout(() => {
-            el.scrollIntoView({
-              behavior: "smooth",
-              block: "center",
-            });
-          }, 300); // délai pour laisser le clavier apparaître
-        });
+        //   setTimeout(() => {
+        //     el.scrollIntoView({
+        //       behavior: "smooth",
+        //       block: "center",
+        //     });
+        //     setTimeout(() => {
+        //       drawerContent.scrollBy({ top: 100, behavior: "smooth" });
+        //     }, 150);
+        //   }, 300);
+        // });
 
         // 2️⃣ créer PaymentRequest pour Apple Pay
         const paymentRequest = stripe.paymentRequest({
@@ -309,7 +312,8 @@
 </script>
 
 <div
-  class="flex flex-col p-4 pt-4 lg:p-8 gap-6 w-full overflow-y-auto min-h-screen h-full md:h-[80vh] bg-[#F8FAFD] pb-[500px]"
+  bind:this={drawerContent}
+  class="flex flex-col p-4 pt-4 lg:p-8 gap-6 w-full overflow-y-auto min-h-screen h-full md:h-[80vh] pb-[300px] bg-red-200"
 >
   <div class="flex flex-row justify-between">
     <!-- <h1 class="font-bold text-2xl">{m.confirmBooking()}</h1> -->
