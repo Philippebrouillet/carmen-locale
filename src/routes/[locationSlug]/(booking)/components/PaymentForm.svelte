@@ -237,20 +237,20 @@
 
         card.mount("#card-element");
 
-        // card.on("focus", () => {
-        //   const el = document.getElementById("card-element");
-        //   if (!el) return;
+        card.on("focus", () => {
+          const el = document.getElementById("card-element");
+          if (!el) return;
 
-        //   setTimeout(() => {
-        //     el.scrollIntoView({
-        //       behavior: "smooth",
-        //       block: "center",
-        //     });
-        //     setTimeout(() => {
-        //       drawerContent.scrollBy({ top: 100, behavior: "smooth" });
-        //     }, 150);
-        //   }, 300);
-        // });
+          setTimeout(() => {
+            el.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            });
+            setTimeout(() => {
+              drawerContent.scrollBy({ top: 50, behavior: "smooth" });
+            }, 150);
+          }, 300);
+        });
 
         // 2️⃣ créer PaymentRequest pour Apple Pay
         const paymentRequest = stripe.paymentRequest({
