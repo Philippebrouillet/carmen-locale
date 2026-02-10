@@ -1,13 +1,14 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
-  import PlaceholderAvatar from "$lib/components/PlaceholderAvatar.svelte";
   import { displayWaitingTime } from "$lib/formater";
   import * as m from "$lib/paraglide/messages.js";
+  import WorkerPicture from "$src/lib/components/WorkerPicture.svelte";
   import { languageTag } from "$src/lib/paraglide/runtime";
   import { shopStore } from "$src/lib/stores/basketStore";
   import { location } from "$src/lib/stores/location.store";
   import type { QueueInfo } from "$src/types/QueueLine";
+  import { fly } from "svelte/transition";
 
   export let worker: QueueInfo;
   export let showInfo: boolean | undefined;
@@ -30,8 +31,8 @@
   $: theme = $location.location.theme;
 </script>
 
-<!-- in:fly|global={{ x: 40, duration: 300, delay: 100 * index }} -->
 <button
+  in:fly|global={{ x: 40, duration: 300, delay: 100 * index }}
   on:click={() => {
     selectedWorkerId = worker.id;
     selectedSlotTime = worker.nextAvailable?.next;
@@ -46,11 +47,14 @@
   class="flex flex-col w-full bg-white box-border p-3 px-4 rounded-lg transition-all duration-300 ease-in-out border border-[#E5E7EB] {`${theme}FOCUSHOVER`}"
 >
   <div class="flex flex-row items-center gap-4 w-full h-fit">
-    {#if worker.avatar != null}
-      <img src={worker.avatar} alt={worker.name} class="w-16 rounded-full aspect-square" />
-    {:else}
-      <PlaceholderAvatar shape="mini-circle" name={worker.name} />
-    {/if}
+    <WorkerPicture
+      {worker}
+      status={worker.nextAvailable?.ticketBefore == 0 ? "available" : "waiting"}
+      withPointer={false}
+      forceAnimation={selectedWorkerId ? selectedWorkerId === worker.id : true}
+      isForceAnimationContext={true}
+    />
+
     <div class="flex flex-col items-start">
       <p class="text-lg font-bold text-primary">{worker.name}</p>
 

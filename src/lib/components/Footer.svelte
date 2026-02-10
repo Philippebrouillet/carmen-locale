@@ -1,12 +1,13 @@
 <script>
   import PaymentMethods from "../assets/PaymentMethods.svelte";
   import WordmarkLogo from "../assets/WordmarkLogo.svelte";
+  import * as m from "$lib/paraglide/messages.js";
   const links = [
     {
       href: "https://www.carden.app/cgu-cgv",
-      text: "CGV",
+      text: m.termsOfService(),
     },
-    { href: "https://www.carden.app/privacy-carden", text: "Politique de confidentialité" },
+    { href: "https://www.carden.app/privacy-carden", text: m.privacyPolicy() },
     { href: "mailto:support@carden.app", text: "support@carden.app" },
   ];
 </script>
@@ -26,15 +27,14 @@
       {/each}
     </ul>
     <p class="max-w-xl text-center px-4">
-      Merci de contacter le salon pour les sujets liés à la réservation. Carden gère uniquement la
-      partie technique.
+      {m.footerContactDisclaimer()}
     </p>
 
     <span>CARDEN © 2026</span>
   </div>
 
   <div class="flex flex-row gap-3 items-center">
-    <p class="text-[#616163]">Booking with</p>
+    <p class="text-[#616163]">{m.bookingWith()}</p>
     <WordmarkLogo />
   </div>
   <PaymentMethods />

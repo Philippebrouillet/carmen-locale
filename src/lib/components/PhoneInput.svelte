@@ -187,14 +187,18 @@
       </div>
     {/if}
   </div>
-
-  <TelInput
-    bind:country={selectedCountry}
-    bind:detailedValue
-    bind:value
-    bind:valid
-    {options}
-    required
-    class="text-xs bg-white rounded-r-lg block w-full p-2.5 focus:outline-none text-gray-900"
-  />
+  <div class="w-full">
+    <label for="tel-input"></label>
+    <TelInput
+      id="tel-input"
+      autocomplete="tel"
+      bind:country={selectedCountry}
+      bind:detailedValue
+      bind:value
+      bind:valid
+      {options}
+      required
+      class="text-xs bg-white rounded-r-lg block w-full p-2.5 focus:outline-none text-gray-900"
+    />
+  </div>
 </div>

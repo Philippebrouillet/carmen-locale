@@ -59,7 +59,7 @@
         min
       </span>
       <p
-        class="text-xs text-left text-secondary break-all transition-all duration-100 {!isOpenFullDescription
+        class="text-xs text-left text-secondary break-words transition-all duration-100 {!isOpenFullDescription
           ? 'line-clamp-2'
           : ''}"
       >

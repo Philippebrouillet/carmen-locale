@@ -26,24 +26,60 @@
     type PaymentMethod,
   } from "@stripe/stripe-js";
 
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import type { PaymentMethod as LocationPaymentMethod } from "$src/types/Location";
+
+  enum PaymentStatus {
+    Succeeded = "succeeded",
+    RequiresPaymentMethod = "requiresPaymentMethod",
+    RequiresConfirmation = "requiresConfirmation",
+    RequiresAction = "requiresAction",
+    Processing = "processing",
+    Canceled = "canceled",
+  }
 
   export let paymentMethod: LocationPaymentMethod;
   export let finalPriceToPay: number;
   export let isCreatingTicket: boolean = false;
-  let drawerContent: HTMLElement;
+
+  const handlePaymentTextErrorByPaymentStatus = (status: Exclude<PaymentStatus, "succeded">) => {
+    switch (status) {
+      case "requiresPaymentMethod":
+        return {
+          title: m.paymentRequiresPaymentMethodTitle(),
+          description: m.paymentRequiresPaymentMethodDescription(),
+        };
+      case "requiresAction":
+        return {
+          title: m.paymentRequiresActionTitle(),
+          description: m.paymentRequiresActionDescription(),
+        };
+      case "canceled":
+        return { title: m.paymentCanceledTitle(), description: m.paymentCanceledDescription() };
+      default:
+        return { title: m.paymentDefaultTitle(), description: m.paymentDefaultDescription() };
+    }
+  };
+  let drawerContent: HTMLDivElement;
   let card: StripeCardElement;
   let disableButton = true;
   let isCardElementCompleted = false;
   let checkoutPaymentMethod: PaymentMethod | undefined = undefined;
   let stripe: Stripe | null = null;
   let now = new Date($clock);
+  let eventSource: EventSource | null = null;
+  $: now = new Date($clock);
   let workerId = $shopStore.selectedProfessional?.id;
   let servicesId = $shopStore.selectedService?.id;
   let rdv = $shopStore.bookingType == "appointment" ? true : false;
   let delay = $shopStore.bookingDelay;
   let checkoutPaymentAvailable = false;
+  let cardError = "";
+  let errorPaymentStatus: Exclude<PaymentStatus, "succeeded"> | undefined;
+
+  $: paymentErrorTexts = errorPaymentStatus
+    ? handlePaymentTextErrorByPaymentStatus(errorPaymentStatus)
+    : null;
   // let services = $location.services.filter((s) => servicesId.includes(s.id.toString()));
   let worker = $location.workers.find((w) => w.id.toString() === workerId?.toString());
   let workerTickets =
@@ -90,8 +126,45 @@
     return await response.json();
   }
 
-  async function pay(clientSecret: { id: string }) {
-    if (!stripe || !clientSecret) {
+  const connectEventSourceToPaymentIntent = (paymentIntentId: string, slug: string) => {
+    if (eventSource != null) {
+      eventSource.close();
+      eventSource = null;
+    }
+
+    console.log("paymentIntentId", paymentIntentId);
+    eventSource = new EventSource(
+      `${PUBLIC_CARDEN_API}/api/v3/stripe/payment-status?payment_intent_id=${paymentIntentId}`,
+    );
+
+    eventSource.onopen = async () => {
+      const res = await pay(paymentIntentId);
+      console.log("Initial payment status:", res?.status);
+
+      if (res?.status && res.status === PaymentStatus.Succeeded) {
+        goto(`/ticket/${slug}`);
+      }
+
+      if (res && res?.status !== PaymentStatus.Succeeded) {
+        isCreatingTicket = false;
+        errorPaymentStatus = res.status;
+        return;
+      }
+    };
+    eventSource.onmessage = async (e) => {
+      const parsedData = JSON.parse(e.data);
+      console.log("Received SSE message:", parsedData);
+      if (parsedData?.status && parsedData.status === PaymentStatus.Succeeded) {
+        goto(`/ticket/${slug}`);
+      }
+    };
+    eventSource.onerror = (err) => {
+      console.error(`[!] sse error ${err}`);
+    };
+  };
+
+  async function pay(paymentIntentId: string): Promise<{ status: PaymentStatus } | undefined> {
+    if (!stripe || !paymentIntentId) {
       console.error("Stripe.js has not loaded yet.");
       return;
     }
@@ -117,12 +190,12 @@
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          paymentIntentId: clientSecret.id,
+          paymentIntentId: paymentIntentId,
           paymentMethodId: _paymentMethod.id,
         }),
       });
 
-      const result = await response.json();
+      return await response.json();
     }
   }
 
@@ -182,13 +255,13 @@
 
         if (paymentMethod === "credit-card" && stripe) {
           const clientSecret = await createPaymentIntent(body.payload.id);
-          await pay(clientSecret);
+          connectEventSourceToPaymentIntent(clientSecret.id, body.payload.slug);
+          return;
         }
 
         const slug = body.payload.slug;
-        await goto(`/ticket/${slug}`);
+        goto(`/ticket/${slug}`);
       }
-
       isCreatingTicket = false;
     } catch (err) {
       isCreatingTicket = false;
@@ -230,9 +303,7 @@
         card.on("change", function (event) {
           // Disable the Pay button if there are no card details in the Element
           isCardElementCompleted = event.complete && !event.error ? true : false;
-          document.querySelector("#card-error").textContent = event.error
-            ? event.error.message
-            : "";
+          cardError = event.error ? event.error.message : "";
         });
 
         card.mount("#card-element");
@@ -306,15 +377,34 @@
   };
   $: isValidForm = formData.name.trim() !== "" && phoneValid && isValidEmail(formData.email);
   $: isCardElementCompleted, isValidForm, setDisableButton();
+
+  onDestroy(() => {
+    if (stripe && card) {
+      card.destroy();
+    }
+    if (eventSource != null) {
+      eventSource.close();
+      eventSource = null;
+    }
+  });
 </script>
 
+<!-- {info.next.toISOString()}
+{$shopStore.bookingDate?.toISOString()} -->
 <div
   bind:this={drawerContent}
-  class="flex flex-col p-4 pt-4 lg:p-8 gap-6 w-full overflow-y-auto min-h-screen h-full md:h-[80vh] pb-[300px]"
+  class="flex flex-col p-4 pt-4 lg:p-8 gap-6 w-full overflow-y-scroll min-h-screen h-full md:h-[80vh] pb-[300px]"
 >
+  {#if paymentErrorTexts}
+    <div class="bg-[#DFE5E7] bg-opacity-30 rounded-xl text-[#A03203] p-4 w-full">
+      <h2 class="uppercase font-bold">{paymentErrorTexts?.title}.</h2>
+      <p>{paymentErrorTexts?.description}</p>
+    </div>
+  {/if}
+
   <div class="flex flex-row justify-between">
-    <!-- <h1 class="font-bold text-2xl">{m.confirmBooking()}</h1> -->
-    <h1 class="font-bold text-2xl">Confirmer votre réservation</h1>
+    <h1 class="font-bold text-2xl">{m.confirmBooking()}</h1>
+
     <Drawer.Close>
       <CloseIcon />
     </Drawer.Close>
@@ -350,26 +440,44 @@
       />
     </div>
 
+    <div class="flex justify-center items-center py-2">
+      <p class="text-xs text-primary text-center max-w-[80%]">
+        {m.basketOnClick()},<br />
+        {m.youAccept()}
+        <a class="text-[#0073FF]" href="https://www.carden.app/cgu-cgv">{m.termsAndConditions()}</a>
+        {m.andThe()}
+        <a class="text-[#0073FF]" href="https://www.carden.app/privacy-carden"
+          >{m.privacyPolicy()}</a
+        >.
+      </p>
+    </div>
+
     <div class="flex flex-row justify-between">
       <div class="flex flex-col">
         <p class="font-bold text-lg">{m.total()}</p>
-        <p class="text-xs opacity-60 -z-10">{m.priceIncludingVAT()}</p>
+        <!-- <p class="text-xs opacity-60 -z-10">{m.priceIncludingVAT()}</p> -->
       </div>
 
       <p class="font-bold text-lg whitespace-nowrap">
         {displayPriceInDollars(finalPriceToPay)}
       </p>
     </div>
-    <p id="card-error" role="alert" class="pt-2 font-bold text-red-500 text-center text-sm"></p>
+
+    {#if cardError}
+      <p id="card-error" role="alert" class=" font-bold text-red-500 text-center text-sm">
+        {cardError}
+      </p>
+    {/if}
+
     {#if errorMessage}
       <p class="text-red-500 text-sm">{errorMessage}</p>
     {/if}
 
     {#if paymentMethod === "credit-card"}
-      <div class="flex flex-col gap-3">
+      <div class="flex flex-col gap-3 mb-3">
         <div id="apple-pay-button"></div>
         {#if checkoutPaymentAvailable}
-          <p class="text-center">Ou payer par carte</p>
+          <p class="text-center text-[#616163]">{m.orPayWithCard()}</p>
         {/if}
         <div
           id="card-element"
@@ -387,17 +495,5 @@
         >{isCreatingTicket ? "..." : m.makeReservation()}</Button
       >
     {/if}
-    <div class="flex justify-center items-center">
-      <p class="text-xs text-primary text-center max-w-[80%]">
-        En cliquant sur le bouton ci-dessus,<br /> vous acceptez les
-        <a class="text-[#0073FF]" href="https://www.carden.app/cgu-cgv"
-          >conditions générales de vente</a
-        >
-        et la
-        <a class="text-[#0073FF]" href="https://www.carden.app/privacy-carden"
-          >Politique de Confidentialité</a
-        >.
-      </p>
-    </div>
   </form>
 </div>

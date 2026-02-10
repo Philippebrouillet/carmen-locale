@@ -1,9 +1,13 @@
 <script>
-  import Button from "$src/lib/components/ui/button/button.svelte";
-  import cardenSvg from "$lib/assets/carden-icon.svg";
+  // import Button from "$src/lib/components/ui/button/button.svelte";
+  // import cardenSvg from "$lib/assets/carden-icon.svg";
+  import { onMount } from "svelte";
+  onMount(() => {
+    window.location.href = "https://carden.app/welcome";
+  });
 </script>
 
-<div class="flex flex-col items-center justify-center min-h-screen py-2">
+<!-- <div class="flex flex-col items-center justify-center min-h-screen py-2">
   <img width="100" src={cardenSvg} alt="carden" />
   <h1 class="text-3xl">Welcome to Carden</h1>
 
@@ -17,4 +21,4 @@
     </Button>
     <Button class="flex-1 w-full text-lg " variant="link" href="/pro">Admin</Button>
   </div>
-</div>
+</div> -->

@@ -1,11 +1,10 @@
 <script lang="ts">
-  import SuccessIcon from "$lib/assets/icons/SuccessIcon.svelte";
   import { displayWaitingTime } from "$lib/formater";
-  import * as m from "$lib/paraglide/messages.js";
   import { languageTag } from "$src/lib/paraglide/runtime";
   import type { LocationTheme } from "$src/types/Location";
   import type { PopupType } from "$src/types/PopupInfos";
   import type { TicketPaymentType, TicketStatus } from "$src/types/Ticket";
+  import * as m from "$lib/paraglide/messages.js";
   import { Bell, Clock3, Dock, InfoIcon, Store, Wallet } from "lucide-svelte";
 
   export let ticket;
@@ -38,33 +37,32 @@
 
   const dataBadgePaiementByPaymentType = {
     acompte_verse: {
-      text: "Acompte versé",
+      text: m.badgePayedAcompte(),
       icon: Wallet,
     },
     toPayOnPlace: {
-      text: "À regler sur place",
+      text: m.badgeToPayOnPlace(),
       icon: Store,
     },
     paid: {
-      text: "Déjà payé en ligne",
+      text: m.badgePaid(),
       icon: Dock,
       bg: "bg-[#23BBAC]",
     },
   } satisfies Record<TicketPaymentType, { text: string; icon: typeof Wallet; bg?: string }>;
 
   const dataBadgeInfosByStatus = {
-    coming: { text: "Heure estimée", icon: Clock3 },
+    coming: { text: m.badgeComing(), icon: Clock3 },
     youAreNext: {
-      text: "C'est bientôt à vous",
+      text: m.badgeYouAreNext(),
       icon: Clock3,
       bg: "bg-[#00D4AA]",
       textColor: "text-white",
     },
-    iminent: { text: "Passage imminent", icon: Bell, bg: "bg-[#00D4AA]", textColor: "text-white" },
-    inProgress: { text: "Heure de fin estimée", icon: Clock3 },
+    iminent: { text: m.badgeIminent(), icon: Bell, bg: "bg-[#00D4AA]", textColor: "text-white" },
+    inProgress: { text: m.badgeInProgress(), icon: Clock3 },
     yourTurn: null,
-
-    isLate: { text: "Retard signalé", icon: Clock3, textColor: "text-[#FF834D]" },
+    isLate: { text: m.badgeIsLate(), icon: Clock3, textColor: "text-[#FF834D]" },
   } satisfies Record<
     TicketStatus,
     { text: string; icon: typeof Clock3; bg?: string; textColor?: string } | null
@@ -141,7 +139,7 @@
     <div class="flex flex-col gap-2 items-center">
       <p class="font-bold text-secondary uppercase text-sm">
         {new Date(ticket.expectedTime).toDateString() === new Date().toDateString()
-          ? "Aujourd'hui"
+          ? m.today()
           : new Date(ticket.expectedTime).toLocaleDateString(languageTag(), {
               weekday: "short",
               day: "numeric",
@@ -151,13 +149,17 @@
       <div class="font-bold text-primary flex items-center justify-center gap-2 max-h-[60px] mb-2">
         <span class=" {isShowTextStatus ? 'text-[2.875rem]' : 'text-6xl'}">
           {#if ticketStatus === "done"}
-            Terminé
+            {m.ticketScheduleDone()}
           {:else if isCancelledOrProAbsent}
-            Annulé
+            {#if ticketStatus === "proAbsent"}
+              {m.ticketScheduleAbsent()}
+            {:else}
+              {m.ticketScheduleCanceled()}
+            {/if}
           {:else if ticketStatus === "inProgress"}
-            En cours
+            {m.ticketScheduleInProgress()}
           {:else if ticketStatus === "yourTurn"}
-            Maintenant
+            {m.ticketScheduleYourTurn()}
           {:else}
             {expectedTime}
           {/if}
@@ -206,15 +208,14 @@
           </div>
         {/if}
       {:else}
-        <p class="font-bold text-secondary uppercase text-sm">Horaire prévue</p>
+        <p class="font-bold text-secondary uppercase text-sm">{m.scheduleExceptedTime()}</p>
       {/if}
     </div>
 
     {#if isTicketGeneratedByClient && ticketStatus !== "yourTurn" && ticketStatus !== "inProgress" && ticketStatus !== "done" && !isCancelledOrProAbsent}
       <p class="text-[#616163] text-xs flex items-center gap-1">
-        Estimation dynamique liée à l’activité sur place <button
-          on:click={() => (popupType = "HOUR_CHANGE")}
-        >
+        {m.scheduleEstimationText()}
+        <button on:click={() => (popupType = "HOUR_CHANGE")}>
           <InfoIcon size="11" class="min-w-[11px] cursor-pointer" />
         </button>
       </p>
@@ -224,7 +225,7 @@
     {#if prestation}
       <div class="flex flex-col gap-2 items-center">
         <span class="text-primary">{prestation.name}</span>
-        <span class="text-secondary">{prestation.duration} minutes</span>
+        <span class="text-secondary">{prestation.duration} {m.minutes()}</span>
       </div>
     {/if}
   </div>

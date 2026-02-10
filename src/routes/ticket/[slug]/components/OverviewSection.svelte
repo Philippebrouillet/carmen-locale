@@ -7,46 +7,39 @@
   export let ticketStatus: TicketStatus;
   export let ticketProgress: number = 0;
   export let isExpectedTimeClose: boolean;
-
+  console.log("queueInfo", queueInfo);
   const proInfosByTicketStatus = {
-    coming: { title: `${queueInfo.name} est occupé`, description: "Service en cours" },
+    coming: {
+      title: m.comingTitle({ workerName: queueInfo.name }),
+      description: m.comingDescription(),
+    },
     youAreNext: {
-      title: "Vous êtes le prochain",
-      description: "Merci de vous rendre au salon et de rester à proximité immédiate.",
+      title: m.yourAreNextTitle(),
+      description: m.youAreNextDescription(),
     },
     iminent: {
-      title: "Vous êtes le prochain",
-      description: "Merci de vous rendre au salon et de rester à proximité immédiate.",
+      title: m.yourAreNextTitle(),
+      description: m.youAreNextDescription(),
     },
-    yourTurn: { title: "C’est à vous.", description: `${queueInfo.name} vous attends sur place.` },
+    yourTurn: {
+      title: m.yourTurnTitle(),
+      description: m.yourTurnDescription({ workerName: queueInfo.name }),
+    },
 
     inProgress: {
-      title: "Service en cours",
-      description: "Installez-vous confortablement et détendez-vous.",
+      title: m.inProgressTitle(),
+      description: m.inProgressDescription(),
     },
     done: {
-      title: "Merci de votre confiance",
-      description: "À très bientôt !",
+      title: m.doneTitle(),
+      description: m.doneDescription(),
     },
     isLate: {
-      title: "Votre tour approche",
-      description: "Service en cours",
+      title: m.isLateTitle(),
+      description: m.isLateDescription(),
     },
   } satisfies Record<TicketStatus, { title: string; description: string }>;
 
-  // const calculateTotalWait = (queueLen: any) => {
-  //   let totalDurationSeconds = queueLen.reduce((total: any, item: any) => {
-  //     return total + item.duration;
-  //   }, 0);
-
-  //   let totalDurationMinutes = totalDurationSeconds / 60;
-
-  //   return totalDurationMinutes;
-  // };
-
-  //   const badgePaymentBgByTheme: Record<LocationTheme, string> = {
-  // 'NEUTRAL':'bg-primary'
-  //   };
   let proInfos = proInfosByTicketStatus[ticketStatus];
   $: isExpectedTimeClose,
     (proInfos =
@@ -105,7 +98,7 @@
           : ''} "
       >
         {#if ticketStatus === "inProgress"}
-          Progression
+          {m.progress()}
         {:else}
           <span class=" text-[1.875rem] text-primary">{queuePosition}</span>
           <span class="self-end">{m.queueProgress()}</span>
@@ -119,11 +112,11 @@
         </div>
         <p class=" md:text-md text-xs text-secondary">
           {#if ticketStatus === "inProgress"}
-            {queueInfo.name} débute sont service
+            {queueInfo.name} {m.startService()}
           {:else if ticketProgress > 75}
-            Le client devant vous a bientôt fini
+            {m.nextClientFinishing()}
           {:else}
-            Progression du client devant vous
+            {m.progressNextClient()}
           {/if}
         </p>
       {/if}

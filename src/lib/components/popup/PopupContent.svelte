@@ -19,6 +19,7 @@
 
   export let popupTypeOpen: PopupType | null;
   export let location: LocationInfo | null;
+  export let descriptionValues: { [key: string]: string } = {};
 
   const dispatch = createEventDispatcher();
 
@@ -38,7 +39,7 @@
     FEES30: {
       icon: BadgeEuro,
       title: m.popupInfosTitleFees(),
-      description: m.popupInfosTextFees30(),
+      description: m.popupInfosTextFees30(descriptionValues),
       warning: m.popupInfosWarningNotRefundable(),
     },
     HOURS: {

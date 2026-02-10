@@ -30,7 +30,7 @@
 {#if mode === "mobile"}
   <!--  EXTERNAL LINKS MOBILE -->
   {#if haveSomeExternalLinks}
-    <div class="lg:hidden px-4 w-full flex flex-col gap-6 mt-1">
+    <div class="lg:hidden w-full flex flex-col gap-6 mt-1">
       <h2 class="font-bold text-lg md:text-2xl">{m.externalLinksTitle()}</h2>
       <div class="flex flex-col gap-4 w-full pb-4 items-center">
         {#each externalLinks as item}

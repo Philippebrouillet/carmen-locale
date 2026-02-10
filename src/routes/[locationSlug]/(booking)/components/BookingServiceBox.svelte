@@ -11,6 +11,7 @@
   export let selectedProfessional: WorkerInfo | null;
   export let selectedService: ServiceInfo | null;
   export let openPopupInfo: (type: PopupType) => void;
+  export let workerNotAvailable: boolean;
 </script>
 
 <div class="flex flex-row justify-between">
@@ -32,12 +33,15 @@
     <div class="flex text-sm flex-col gap-4 w-full">
       <div
         in:fly={{ y: 5, duration: 400 }}
-        class="flex flex-row justify-between items-center w-full text-sm text-primary font-normal"
+        class="flex flex-row justify-between items-center w-full text-sm gap-2 text-primary font-normal"
       >
-        <span>Professionnel</span>
+        <span>{m.professional()}</span>
 
-        <span>
+        <span class={workerNotAvailable ? "text-[#FF834D] " : ""}>
           {selectedProfessional ? selectedProfessional.name : m.anyProfessional()}
+          {#if workerNotAvailable}
+            <span>({m.unavailableShort()})</span>
+          {/if}
         </span>
       </div>
 
@@ -47,6 +51,7 @@
           class="w-full flex flex-row justify-between items-center text-sm text-primary font-normal"
         >
           <p>{selectedService.name}</p>
+
           <p>{selectedService?.durationS / 60}min</p>
         </div>
       {/if}
@@ -57,7 +62,7 @@
         on:click={() => openPopupInfo("HOURS")}
         class="text-[#616163] text-sm flex gap-1 items-center underline underline-offset-4 decoration-dashed decoration-[#DFE5E7]"
       >
-        Heure de passage estimée <span><InfoIcon size={12} /></span>
+        {m.estimatedTimeOfPassage()} <span><InfoIcon size={12} /></span>
       </button>
     </div>
   </div>

@@ -11,7 +11,7 @@
   export let text: string;
 
   $: start = new Date(new Date($clock).getTime() + 5 * 60 * 1000);
-  $: workers = computeQueue($location, new Date($clock), start);
+  $: workers = $location ? computeQueue($location, new Date($clock), start) : [];
 
   const navigateBack = (): void => {
     if (

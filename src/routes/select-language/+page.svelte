@@ -5,35 +5,35 @@
   import { availableLanguageTags } from "$lib/paraglide/runtime";
   import { i18n } from "$lib/i18n";
   import { page } from "$app/stores";
+
+  import * as m from "$lib/paraglide/messages.js";
+  import BackIcon from "$src/lib/assets/icons/BackIcon.svelte";
+  import { languages } from "./language";
 </script>
 
 <main class="w-full">
   <header
-    class="relative flex-1 flex flex-col items-center min-h-[13rem] md:h-[13rem] w-full p-4 md:py-6 md:px-16 bg-[url('/location-cover.webp')] bg-cover bg-no-repeat mb-10 rounded-b-[1.8rem]"
+    class="w-full flex-1 flex flex-col items-center justify-center min-h-[6rem] rounded-b-[1.8rem] mb-2"
   >
-    <div class="w-fit flex flex-col text-primary-foreground z-10 items-center">
-      <h2 class="font-bold text-[3rem]">Carden</h2>
-      <p class="-mt-2 text-[1.25rem]">Your Care Garden</p>
+    <div class="flex-1 w-full h-full flex justify-center items-center">
+      <div class="flex justify-between w-full items-center px-2">
+        <button on:click={() => history.back()}>
+          <BackIcon />
+        </button>
+        <h1 class="font-bold text-[1.5rem] text-center text-primary">{m.chooseYourLanguage()}</h1>
+        <div></div>
+      </div>
     </div>
-    <img
-      in:fly={{ y: 25, duration: 400 }}
-      src="/logo.png"
-      alt="logo"
-      class="absolute left-auto right-auto -bottom-10 w-28 h-28 z-10 rounded-full border-[1px] border-white shadow-md"
-    />
-    <div
-      class="w-full h-full bg-[#150B3DB2] bg-opacity-50 rounded-b-[1.8rem] absolute top-0 left-0"
-    />
   </header>
   <div class="flex flex-col items-center py-6 pb-8">
-    <h2 class="text-[1.25rem] md:text-[1.5rem] md:leading-[1.5rem] font-bold">WELCOME</h2>
-    <h1 class="text-[1rem] md:text-[1.25rem] font-bold">Please choose your language</h1>
-    <h3 class="text-sm opacity-60">Oneclick experience for your booking & payment</h3>
-    <div class="grid grid-cols-3 md:grid-cols-5 gap-2 md:gap-4 mt-6">
+    <div class="grid grid-cols-3 md:grid-cols-5 gap-2 justify-between w-full md:gap-4 mt-6 px-2">
       {#each availableLanguageTags as lang, index}
+        {@const fullname = languages.find((l) => l.code.includes(lang))?.name}
+        {@const selectedLanguage = languageTag() == lang}
         <a
           class="hover:shadow-lg cursor-pointer flex flex-col gap-2 items-center rounded-lg p-2 md:p-4 transition-all duration-300 ease-in-out"
-          class:shadow-lg={languageTag() == lang}
+          class:bg-secondary={selectedLanguage}
+          class:bg-opacity-40={selectedLanguage}
           in:fly|global={{ y: 25, duration: 400, delay: index * 90 }}
           href={i18n.route($page.data.redirect ?? "/")}
           hreflang={lang}
@@ -43,7 +43,11 @@
             alt={lang}
             class=" w-16 aspect-square object-cover rounded-full"
           />
-          <p class="text-[1rem] font-medium capitalize">{lang}</p>
+
+          <!-- Note: indentation may look off but the code structure is correct -->
+          <p class:text-white={selectedLanguage} class="text-[1rem] font-medium capitalize">
+            {fullname ? m[fullname]?.() : fullname}
+          </p>
         </a>
       {/each}
     </div>

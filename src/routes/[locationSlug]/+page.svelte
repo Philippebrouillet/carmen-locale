@@ -16,7 +16,7 @@
   import { onMount } from "svelte";
   import { resetShopStore } from "$src/lib/stores/basketStore";
   import ExternalLinks from "$src/lib/components/ExternalLinks.svelte";
-  import { goto, replaceState } from "$app/navigation";
+  import { goto } from "$app/navigation";
 
   const locationSlug = $page.params.locationSlug;
   let location = $locationResponseApi.location;
@@ -77,7 +77,9 @@
       </div>
     </div>
 
-    <ExternalLinks {location} mode="mobile" />
+    <div class="px-4 md:px-0">
+      <ExternalLinks {location} mode="mobile" />
+    </div>
 
     <div class="px-4">
       <LocationSection {fullAddress} {location} />

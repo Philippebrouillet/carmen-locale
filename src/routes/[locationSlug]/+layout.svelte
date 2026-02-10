@@ -101,7 +101,6 @@
         eventSource = null;
       }
       eventSource = new EventSource(
-        //`${PUBLIC_CARDEN_API}/api/v5/events/sse?locations=[${data.location.slug}]`
         `${PUBLIC_CARDEN_API}/api/v2/location/events?token=${data.location.id}`,
       );
 

@@ -1,16 +1,17 @@
 <script lang="ts">
   import type { LocationInfo, TicketInfo } from "$src/types/Location";
+  import * as m from "$lib/paraglide/messages.js";
 
   export let ticket: TicketInfo;
   export let location: LocationInfo;
-  export let ticketModules: any;
   export let googlePlaceId: string | null = null;
   export let satisfactionLink: string | null = null;
+  export let prestationName: string;
   let selectedStars = 0;
 </script>
 
 <div class="flex flex-col p-4 justify-center bg-white rounded-2xl">
-  <h3 class="font-bold text-lg">Évaluez votre expérience</h3>
+  <h3 class="font-bold text-lg">{m.evaluationTitle()}</h3>
   <span class="text-xs text-seoncdary">
     {location.name}
   </span>
@@ -36,6 +37,8 @@
               newUrl.searchParams.set("locationName", location.name);
               newUrl.searchParams.set("ticketId", String(ticket.id));
               newUrl.searchParams.set("locationId", String(location.id));
+              newUrl.searchParams.set("prestation", prestationName);
+              newUrl.searchParams.set("userName", ticket.details.name);
               window.open(newUrl.toString(), "_blank");
             }
           }

@@ -22,9 +22,9 @@
   export let data;
 
   let selectedDay: CalendarDate = today(getLocalTimeZone());
-  let now = new Date($clock);
-  let filterWorkerId: number | null = data.workerFilter ? Number(data.workerFilter) : null;
-  let selectedWorkerId: number | null = filterWorkerId;
+  $: now = new Date($clock);
+
+  let selectedWorkerId: number | null = data.workerFilter ? Number(data.workerFilter) : null;
   let selectedSlotTime: Date | undefined;
   let selectedTimeFilter: "morning" | "afternoon" = "morning";
   let isOpenAfterOptions = false;
@@ -138,13 +138,34 @@
   onMount(() => {
     if (["DAY", "3H"].includes(bookingMode)) {
       setShowableBookingDelays();
-      const firstAvailableDelay = bookingDelays.find((d) => d.haveWorkerAvailable)?.time;
+
+      // const firstAvailableDelay = bookingDelays.find((d) => d.haveWorkerAvailable)?.time;
+      // if (firstAvailableDelay) {
+      //   setBookingDelay(Number(firstAvailableDelay));
+      // }
+      const worker = allWorkers.find((w) => w.id == selectedWorkerId);
+
+      const firstAvailableDelay =
+        worker && worker.tickets.length > 0
+          ? bookingDelays.reduce((closest, d) => {
+              const delayDate = new Date(Date.now() + Number(d.time) * 60 * 1000);
+
+              const diff = Math.abs(delayDate.getTime() - worker.nextAvailable.next.getTime());
+
+              if (!closest || diff < closest.diff) {
+                return { time: d.time, diff };
+              }
+
+              return closest;
+            }, null)?.time
+          : bookingDelays.find((d) => d.haveWorkerAvailable)?.time;
+
       if (firstAvailableDelay) {
         setBookingDelay(Number(firstAvailableDelay));
       }
     }
-    if (filterWorkerId) {
-      const selectedWorker = workers.find((w) => w.id == filterWorkerId);
+    if (selectedWorkerId) {
+      const selectedWorker = workers.find((w) => w.id == selectedWorkerId);
       if (selectedWorker?.nextAvailable?.next)
         shopStore.update((store) => {
           return {
@@ -184,10 +205,10 @@
     setBookingDate(today(getLocalTimeZone()).toDate(getLocalTimeZone()));
   }
   $: otherWorkers = workers
-    .filter((w) => w.id != filterWorkerId)
+    .filter((w) => w.id != selectedWorkerId)
     .filter((w) => start < w.endWorkerDate);
   $: selectedWorker = workers
-    .filter((w) => w.id == filterWorkerId)
+    .filter((w) => w.id == selectedWorkerId)
     .filter((w) => start < w.endWorkerDate);
   // $: {
   //   let locationPlanning = getLocationPlaning($location);
@@ -203,7 +224,7 @@
 
   <div class="flex flex-col items-start md:items-start gap-4 w-full lg:w-[90%] xl:[60%] md:mt-0">
     <div class="w-full overflow-x-auto">
-      <ProfessionalSelect {workers} bind:selectedWorkerId={filterWorkerId} />
+      <ProfessionalSelect {workers} bind:selectedWorkerId />
     </div>
 
     {#if ["DAY", "3H"].includes(bookingMode)}
@@ -249,6 +270,16 @@
         >
           <button
             on:click={() => {
+              // if no available slot in default selected time filter (morning), switch to afternoon
+              if (
+                selectedTimeFilter === "morning" &&
+                !afterSlots.some(
+                  (slot) => slot.haveWorkerAvailable && slot.date.getTime() > now.getTime(),
+                )
+              ) {
+                selectedTimeFilter = "afternoon";
+              }
+
               isOpenAfterOptions = !isOpenAfterOptions;
             }}
             class="flex items-center justify-between p-4 w-full"
@@ -308,18 +339,22 @@
 
     {#if selectedWorker.length || otherWorkers.length}
       <div class="flex flex-col gap-4 w-full overflow-hidden">
-        {#if filterWorkerId}
+        {#if selectedWorkerId}
           <!-- SELECTED WORKER  -->
           {#each selectedWorker as w, i}
-            <Worker
-              bind:selectedWorkerId
-              bind:selectedSlotTime
-              worker={w}
-              showInfo={appointmentOptionSelected}
-              isFree={w.nextAvailable?.isFirstSlot &&
-                !(appointmentOptionSelected && w.nextAvailable?.createHole)}
-              index={i}
-            />
+            {#key selectedTime}
+              {#key bookingDelay}
+                <Worker
+                  bind:selectedWorkerId
+                  bind:selectedSlotTime
+                  worker={w}
+                  showInfo={appointmentOptionSelected}
+                  isFree={w.nextAvailable?.isFirstSlot &&
+                    !(appointmentOptionSelected && w.nextAvailable?.createHole)}
+                  index={i}
+                />
+              {/key}
+            {/key}
           {/each}
           {#if otherWorkers.length && selectedWorker.length}
             <div class="mb-2 mt-4">
@@ -330,9 +365,10 @@
 
         {#if otherWorkers.length}
           <!-- OTHER WORKERS  -->
-          {#key selectedTime}
-            {#key bookingDelay}
-              {#each otherWorkers as w, i}
+
+          {#each otherWorkers as w, i}
+            {#key selectedTime}
+              {#key bookingDelay}
                 <Worker
                   bind:selectedWorkerId
                   bind:selectedSlotTime
@@ -341,9 +377,9 @@
                   index={i}
                   isFree={false}
                 />
-              {/each}
+              {/key}
             {/key}
-          {/key}
+          {/each}
         {/if}
       </div>
     {:else}

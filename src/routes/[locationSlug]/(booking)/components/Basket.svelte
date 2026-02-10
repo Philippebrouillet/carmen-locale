@@ -4,7 +4,6 @@
   import { displayPriceInDollars } from "$lib/formater";
   import { loadStripe, type Stripe } from "@stripe/stripe-js";
   import { onMount } from "svelte";
-  // import type { CountryCode } from "svelte-tel-input/types";
   import * as Drawer from "$lib/components/ui/drawer";
   import BookingServiceBox from "./BookingServiceBox.svelte";
 
@@ -32,6 +31,50 @@
   import PaymentForm from "./PaymentForm.svelte";
   import { goto } from "$app/navigation";
   import { browser } from "$app/environment";
+
+  type ErrorBookingNotPossible = "SLOT_NOT_AVAILABLE" | "WORKER_NOT_AVAILABLE";
+
+  $: workerTickets = $location.workers
+    .filter((w) => w.id === $shopStore.selectedProfessional?.id)
+    .flatMap((w) => w.tickets)
+    .filter((t) => t.doneTime === null && t.canceledTime === null);
+
+  $: newStart = $shopStore?.bookingDate?.getTime();
+  $: newEnd =
+    newStart && selectedService?.durationS ? newStart + selectedService.durationS * 1000 : 0;
+
+  let errorBookingNotPossible: ErrorBookingNotPossible | undefined = undefined;
+  $: newStart, newEnd, workerTickets, (errorBookingNotPossible = handleErrorBookingNotPossible());
+
+  $: errorMessageBookingNotPossibleByError = {
+    SLOT_NOT_AVAILABLE: m.slotNotAvailable(),
+    WORKER_NOT_AVAILABLE: m.workerNotAvailable(selectedProfessional?.name),
+  };
+
+  $: errorMessageBookingNotPossible = errorBookingNotPossible
+    ? errorMessageBookingNotPossibleByError[errorBookingNotPossible]
+    : undefined;
+
+  const handleErrorBookingNotPossible = (): ErrorBookingNotPossible | undefined => {
+    if (selectedProfessional && selectedProfessional.status !== "AVAILABLE")
+      return "WORKER_NOT_AVAILABLE";
+
+    const isBooked =
+      newStart && newEnd
+        ? workerTickets.some((t) => {
+            const start = t?.expectedTime ? t?.expectedTime?.getTime() : t?.rdvTime?.getTime();
+            if (!start) return false;
+            const end = start + t.durationS * 1000;
+            return newStart <= end && newEnd >= start;
+          })
+        : false;
+
+    if (isBooked) {
+      return "SLOT_NOT_AVAILABLE";
+    }
+
+    return undefined;
+  };
 
   let paymentMode: LocationPaymentMode = $location.config.payment_mode;
   let isCreatingTicket = false;
@@ -108,6 +151,13 @@
   $: haveToPayFees =
     paymentMode === "ONLINE_UPFRONT_FEE" || paymentMode === "ONLINE_FULL" ? true : false;
 
+  $: descriptionPopupValues = {
+    pourcentFee: $location.config.service_fee_percent,
+    totalPrestation: haveModifiedPrice
+      ? displayPriceInDollars(selectedService?.price || 0)
+      : displayPriceInDollars(priceWithDiscountPrice),
+  };
+
   const calculateFinalPrice = () => {
     if (isOnlinePayment) {
       if (paymentMode === "ONLINE_UPFRONT_FEE") return feesWithAccompte;
@@ -162,7 +212,7 @@
   <div class="flex flex-col justify-center">
     <div id="loader" class="h-[200px]"></div>
     <h3 class="text-white text-2xl font-bold text-center">
-      Validation en cours
+      {m.basketLoadingText()}
       <span class="inline-flex ml-1">
         <span class="dot">.</span>
         <span class="dot">.</span>
@@ -182,6 +232,14 @@
       <div class="px-6 md:px-8">
         <BookingHeader text={m.bookingBasketTitle()} />
 
+        {#if errorMessageBookingNotPossible}
+          <div
+            class="bg-[#DFE5E7] bg-opacity-30 rounded-xl text-sm text-[#A03203] p-4 w-full mb-2 -mt-5 md:mt-4"
+          >
+            <p>{errorMessageBookingNotPossible}</p>
+          </div>
+        {/if}
+
         <div class="pb-2 md:pb-6 md:mt-6">
           <h1 class="font-bold text-lg">{m.yourSelection()}</h1>
         </div>
@@ -189,7 +247,12 @@
           <div
             class="flex flex-col gap-4 bg-white rounded-lg p-4 md:p-6 border border-[#DFE5E7] mb-4"
           >
-            <BookingServiceBox {selectedProfessional} {selectedService} {openPopupInfo} />
+            <BookingServiceBox
+              {selectedProfessional}
+              {selectedService}
+              {openPopupInfo}
+              workerNotAvailable={errorBookingNotPossible === "WORKER_NOT_AVAILABLE" ? true : false}
+            />
 
             <div class="flex text-sm flex-row justify-between text-primary font-bold items-center">
               <p class=" text-sm flex gap-1">
@@ -198,12 +261,16 @@
               </p>
 
               <p class="text-lg">
-                {bookingTime
-                  ? bookingTime?.toLocaleTimeString(languageTag(), {
-                      hour: "numeric",
-                      minute: "numeric",
-                    })
-                  : ""}
+                {#if errorBookingNotPossible === "SLOT_NOT_AVAILABLE"}
+                  <span class="text-[#FF834D] font-bold"> {m.unavailableShort()}</span>
+                {:else}
+                  {bookingTime
+                    ? bookingTime?.toLocaleTimeString(languageTag(), {
+                        hour: "numeric",
+                        minute: "numeric",
+                      })
+                    : ""}
+                {/if}
               </p>
             </div>
           </div>
@@ -277,7 +344,7 @@
                   }}
                   class="flex gap-1.5 items-center underline underline-offset-4 decoration-dashed decoration-[#DFE5E7]"
                 >
-                  Frais de service <span><InfoIcon size={12} /></span>
+                  {m.fees()} <span><InfoIcon size={12} /></span>
                 </button>
                 <p>{displayPriceInDollars(finalCardenFees)}</p>
               </div>
@@ -398,17 +465,15 @@
                 </button>
               </div>
 
-              <div
-                class="flex justify-between items-center text-primary font-bold text-sm px-6 md:px-8"
-              >
-                <p class="flex gap-1.5">
+              <div class="flex justify-between items-center text-primary font-bold text-sm gap-2">
+                <p class="flex gap-1.5 whitespace-nowrap">
                   {#if paymentMethod === "in-store"}<StoreIcon size={18} />{:else}
                     <Dock size={18} />
                   {/if}
 
                   {paymentMethod === "in-store" ? m.remaindToPayInPlace() : m.toBePaidOnline()}
                 </p>
-                <p>{displayPriceInDollars(priceWithDiscountPrice)}</p>
+                <p class=" whitespace-nowrap">{displayPriceInDollars(priceWithDiscountPrice)}</p>
               </div>
             </div>
           {/if}
@@ -427,6 +492,7 @@
         {/if}
 
         <Button
+          disabled={errorMessageBookingNotPossible ? true : false}
           type="button"
           on:click={() => {
             isPaymentPopupOpen = true;
@@ -457,12 +523,6 @@
           {/if}
         </Button>
       </div>
-
-      <Drawer.Root bind:open={isPaymentPopupOpen}>
-        <Drawer.Content class=" z-[120] lg:w-1/2 h-full {isCreatingTicket ? 'hidden' : 'block'}">
-          <PaymentForm {paymentMethod} {finalPriceToPay} bind:isCreatingTicket />
-        </Drawer.Content>
-      </Drawer.Root>
     </div>
     <div class="hidden lg:block h-screen w-1/2 lg:relative">
       <img src={$location.location.banner} alt="banner" class="h-full w-full object-cover" />
@@ -471,7 +531,13 @@
   </div>
 {/if}
 
-<Popup bind:popupTypeOpen />
+<Drawer.Root bind:open={isPaymentPopupOpen}>
+  <Drawer.Content class=" z-[120] lg:w-1/2 h-full {isCreatingTicket ? 'hidden' : 'block'}">
+    <PaymentForm {paymentMethod} {finalPriceToPay} bind:isCreatingTicket />
+  </Drawer.Content>
+</Drawer.Root>
+
+<Popup bind:popupTypeOpen descriptionValues={descriptionPopupValues} />
 
 <style>
   .dot {

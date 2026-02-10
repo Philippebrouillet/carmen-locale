@@ -14,15 +14,16 @@
   import Popup from "$src/lib/components/popup/Popup.svelte";
   import type { PopupType } from "$src/types/PopupInfos";
   import { PUBLIC_CARDEN_API } from "$env/static/public";
-
   import type { TicketStatus } from "$src/types/Ticket";
   import { displayPriceInDollars, displayWaitingTime } from "$src/lib/formater";
   import { Store } from "lucide-svelte";
   import EvaluationSection from "./components/EvaluationSection.svelte";
   import { onDestroy, onMount } from "svelte";
+  import YoutubeVideo from "./components/YoutubeVideo.svelte";
+  import * as m from "$lib/paraglide/messages.js";
 
   export let data;
-
+  console.log("data", data);
   const locationSlug = data.location.location.id;
 
   let ticket = data.ticket;
@@ -41,8 +42,13 @@
       return status;
     }
 
+    if (!ticket.startTime && !ticket.doctorId) {
+      status = "proAbsent";
+      return status;
+    }
+
     if (ticket.canceledTime) {
-      if (ticket.canceledByPro) {
+      if (ticket.canceledBy === "PRO") {
         status = "cancelledByPro";
       } else {
         status = "cancelled";
@@ -260,7 +266,6 @@
       : prestation.price
     : ticket.details.left_to_pay;
   $: isTicketGeneratedByClient = ticket.details.eticket;
-
   $: userTicketProgress,
     nextUserTicketProgress,
     data.queuePosition,
@@ -344,30 +349,27 @@
           ]} bg-opacity-30 p-4 text-[#616163] text-sm"
         >
           {#if showThanksText}
-            <p>Réservation confirmée.</p>
-            <p>Merci de votre confiance et de votre patience.</p>
+            <p>{m.acceptedBooking()}</p>
+            <p>{m.thanksForBooking()}</p>
           {:else if ticketStatus === "inProgress"}
-            Informez vos proches de votre progression et horaire de fin en partageant votre ticket.
+            {m.ticketInProgressTitle()}
           {:else if ticketStatus === "cancelled"}
-            Vous avez annulé votre réservation.
+            {m.ticketCancelledTitle()}
           {:else if ticketStatus === "cancelledByPro"}
-            Le professionnel a annulé votre réservation. Contactez-le pour obtenir des explications.
+            {m.ticketCancelledByProTitle()}
           {:else if ticketStatus === "proAbsent"}
-            Le professionnel a indiqué que vous êtiez absent. Contactez-le directement pour obtenir
-            de l’aide ou des explications.
+            {m.ticketProAbsentTitle()}
           {:else if ticketStatus === "isLate"}
-            Une prestation a pris plus de temps que prévu, nous avons ajusté votre horaire de
-            passage pour éviter de vous faire attendre sur place.
+            {m.ticketIsLateTitle()}
             <p class="uppercase font-bold text-sm text-[#A03203] mt-1">
-              NOUVELLE ESTIMATION <span
-                >{timeWithLateTime ? displayWaitingTime(timeWithLateTime) : ""}</span
-              >
+              {m.newEstimation()}
+              <span>{timeWithLateTime ? displayWaitingTime(timeWithLateTime) : ""}</span>
             </p>
           {/if}
         </div>
       {/if}
 
-      {#if data.queuePosition < 2 && !isCancelledOrProAbsent}
+      {#if data.queueInfo && data.queuePosition < 2 && !isCancelledOrProAbsent}
         <OverviewSection
           {ticketStatus}
           {isExpectedTimeClose}
@@ -380,10 +382,10 @@
       {#if ticketStatus === "done"}
         <EvaluationSection
           {location}
-          ticketModules={data.queueInfo.ticketModules}
           {ticket}
           googlePlaceId={data.config.google_place_id}
           satisfactionLink={data.config.satisfaction_survey_link}
+          prestationName={prestation.name}
         />
       {/if}
 
@@ -408,12 +410,11 @@
             variant="outline"
             class=" w-3/4 border {disabledDeleteButton
               ? 'bg-[#DFE5E7] cursor-not-allowed border-[#DFE5E7] '
-              : bgPrimaryActionButtonByTheme[theme]}  text-white  {borderActionButtonByTheme[
-              theme
-            ]}"
+              : `${bgPrimaryActionButtonByTheme[theme]} ${
+                  borderActionButtonByTheme[theme]
+                }`} text-white"
           >
-            <!-- {m.cancel()} -->
-            Annuler la réservation
+            {m.cancelTicket()}
           </Button>
         {/if}
 
@@ -428,13 +429,12 @@
               theme
             ]}"
           >
-            <!-- {m.cancel()} -->
-            Nouvelle réservation
+            {m.newBooking()}
           </Button>
         {/if}
       </div>
 
-      {#if data.queuePosition > 1 && !isCancelledOrProAbsent}
+      {#if data.queueInfo && data.queuePosition > 1 && !isCancelledOrProAbsent}
         <OverviewSection
           {isExpectedTimeClose}
           {ticketStatus}
@@ -448,12 +448,14 @@
         <div class="bg-white p-4 flex items-center rounded-2xl shadow-sm -mt-2">
           <div class="flex justify-between gap-2 w-full font-bold text-sm text-primary">
             <div class="flex gap-2">
-              <Store size="18" /><span class="">Reste à payer sur place</span>
+              <Store size="18" /><span class="">{m.leftToPayOnPlace()}</span>
             </div>
             {displayPriceInDollars(leftToPay)}
           </div>
         </div>
       {/if}
+
+      <YoutubeVideo config={data.config} />
 
       <ExternalLinks {location} mode="mobile" />
 
@@ -479,13 +481,13 @@
   bind:popupTypeOpen={popupType}
   on:confirmAction={async () => {
     if (popupType === "CANCEL_RESERVATION") {
-      await fetch(`${PUBLIC_CARDEN_API}/api/v2/ticket/${ticket.id}/status`, {
+      await fetch(`${PUBLIC_CARDEN_API}/api/v3/ticket/${ticket.id}/status`, {
         method: "PATCH",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify("CANCELED"),
+        body: JSON.stringify({ status: "CANCELED", canceled_by: "USER" }),
       });
     }
   }}

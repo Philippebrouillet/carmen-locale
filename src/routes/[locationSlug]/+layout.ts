@@ -4,8 +4,9 @@ import { formatLocationResponse } from "$src/services/Location";
 
 export async function load({ fetch, params }) {
   const slug = params.locationSlug;
-  // let resp = await fetch(`${PUBLIC_CARDEN_API}/api/v5/location/${slug}`);
+
   const resp = await fetch(`${PUBLIC_CARDEN_API}/api/v3/location/${slug}`);
+
   const configResp = await fetch(`${PUBLIC_CARDEN_API}/api/v1/location/${slug}/config`);
   if (resp.ok) {
     const json = await resp.json();

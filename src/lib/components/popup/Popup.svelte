@@ -9,6 +9,7 @@
 
   export let popupTypeOpen: PopupType | null = null;
   export let location: LocationInfo | null = null;
+  export let descriptionValues: { [key: string]: string } | undefined = undefined;
 
   let openPopup = false;
   let openPopupMobile = false;
@@ -37,7 +38,7 @@
     }
   }
 
-  $: dataProps = { popupTypeOpen, location };
+  $: dataProps = { popupTypeOpen, location, descriptionValues };
 </script>
 
 {#if popupTypeOpen}
