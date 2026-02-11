@@ -261,5 +261,7 @@
   "paymentDefaultDescription": "حدث خطأ فني. يرجى التحقق من معلوماتك والمحاولة مرة أخرى.",
   "slotNotAvailable": "للأسف، لم يعد موعدك متاحًا، يرجى تعديل حجزك",
   "workerNotAvailable": "للأسف، لم يعد {workerName} متاحًا، يُرجى تعديل حجزك.",
-  "estimatedTimeOfPassage": "الوقت المتوقع للوصول"
+  "estimatedTimeOfPassage": "الوقت المتوقع للوصول",
+  "morning": "صباح",
+  "afternoon": "بعد الظهر"
 }

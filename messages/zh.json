@@ -261,5 +261,7 @@
   "paymentDefaultDescription": "发生技术故障。请检查您的信息并重试。",
   "slotNotAvailable": "很抱歉，您预约的时间段已不可用，请修改您的预约。",
   "workerNotAvailable": "很抱歉， {workerName}已不再可用，请修改您的预订。",
-  "estimatedTimeOfPassage": "预计到达时间"
+  "estimatedTimeOfPassage": "预计到达时间",
+  "morning": "早晨",
+  "afternoon": "下午"
 }

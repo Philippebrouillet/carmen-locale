@@ -261,5 +261,7 @@
   "paymentDefaultDescription": "एक तकनीकी त्रुटि उत्पन्न हो गई है। कृपया अपनी जानकारी जांचें और पुनः प्रयास करें।",
   "slotNotAvailable": "दुर्भाग्यवश, आपका निर्धारित समय अब उपलब्ध नहीं है, कृपया अपनी बुकिंग में बदलाव करें।",
   "workerNotAvailable": "{workerName} दुर्भाग्यवश अब उपलब्ध नहीं है, कृपया अपना आरक्षण संशोधित करें।",
-  "estimatedTimeOfPassage": "आगमन का अनुमानित समय"
+  "estimatedTimeOfPassage": "आगमन का अनुमानित समय",
+  "morning": "सुबह",
+  "afternoon": "दोपहर"
 }

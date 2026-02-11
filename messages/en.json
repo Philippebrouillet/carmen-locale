@@ -261,5 +261,7 @@
   "paymentDefaultDescription": "A technical error has occurred. Please check your information and try again.",
   "slotNotAvailable": "Your time slot is unfortunately no longer available, please modify your reservation",
   "workerNotAvailable": "{workerName} is unfortunately no longer available, please modify your reservation",
-  "estimatedTimeOfPassage": "Estimated time of arrival"
+  "estimatedTimeOfPassage": "Estimated time of arrival",
+  "morning": "Morning",
+  "afternoon": "Afternoon"
 }

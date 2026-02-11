@@ -261,5 +261,7 @@
   "paymentDefaultDescription": "Ocorreu um erro técnico. Verifique suas informações e tente novamente.",
   "slotNotAvailable": "Infelizmente, o horário escolhido não está mais disponível. Por favor, modifique sua reserva.",
   "workerNotAvailable": "{workerName} infelizmente não está mais disponível. Por favor, modifique sua reserva.",
-  "estimatedTimeOfPassage": "Horário estimado de chegada"
+  "estimatedTimeOfPassage": "Horário estimado de chegada",
+  "morning": "Manhã",
+  "afternoon": "Tarde"
 }

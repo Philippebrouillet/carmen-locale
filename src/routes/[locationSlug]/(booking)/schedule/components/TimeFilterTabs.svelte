@@ -1,4 +1,5 @@
 <script lang="ts">
+  import * as m from "$lib/paraglide/messages.js";
   type TimeFilter = "morning" | "afternoon";
 
   export let selectedTimeFilter: TimeFilter = "morning";
@@ -6,8 +7,8 @@
   const timeFilters: TimeFilter[] = ["morning", "afternoon"];
 
   const nameByFilter = {
-    morning: "Matin",
-    afternoon: "Après-midi",
+    morning: m.morning(),
+    afternoon: m.afternoon(),
   };
 </script>
 

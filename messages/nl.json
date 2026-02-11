@@ -261,5 +261,7 @@
   "paymentDefaultDescription": "Er is een technische fout opgetreden. Controleer uw gegevens en probeer het opnieuw.",
   "slotNotAvailable": "Uw gereserveerde tijdslot is helaas niet meer beschikbaar. Wijzig uw reservering.",
   "workerNotAvailable": "{workerName} is helaas niet meer beschikbaar. Pas uw reservering aan.",
-  "estimatedTimeOfPassage": "Geschatte aankomsttijd"
+  "estimatedTimeOfPassage": "Geschatte aankomsttijd",
+  "morning": "Ochtend",
+  "afternoon": "Middag"
 }
