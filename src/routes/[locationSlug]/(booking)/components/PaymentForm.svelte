@@ -191,6 +191,7 @@
         body: JSON.stringify({
           paymentIntentId: paymentIntentId,
           paymentMethodId: _paymentMethod.id,
+          locationId: $location.location.id,
         }),
       });
 
