@@ -275,6 +275,7 @@
       if (stripeKey) {
         stripe = await loadStripe(stripeKey, {
           locale: languageTag().split("-")[0] as any,
+          stripeAccount: $location.location.connectAccount || undefined,
         });
 
         if (!stripe) {
