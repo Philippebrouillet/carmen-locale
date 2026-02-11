@@ -7,7 +7,7 @@
   export let ticketStatus: TicketStatus;
   export let ticketProgress: number = 0;
   export let isExpectedTimeClose: boolean;
-  console.log("queueInfo", queueInfo);
+
   const proInfosByTicketStatus = {
     coming: {
       title: m.comingTitle({ workerName: queueInfo.name }),

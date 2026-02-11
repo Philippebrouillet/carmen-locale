@@ -2,10 +2,10 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import BackIcon from "$lib/assets/icons/BackIcon.svelte";
-  import Breadcrumb from "$lib/components/Breadcrumb.svelte";
   import BreadCrumpV2 from "$src/lib/components/BreadCrumpV2.svelte";
   import { clock } from "$src/lib/stores/clock.svelte";
   import { location } from "$src/lib/stores/location.store";
+  import { buildUrl } from "$src/services/buildNavigationUrl";
   import { computeQueue } from "$src/services/QueueLine";
 
   export let text: string;
@@ -18,9 +18,10 @@
       ($page.url.href.includes("services") &&
         workers.filter((w) => w.formatedStatus === "available").length === 1) ||
       $page.url.href.includes("professional")
-    )
-      goto(`/${$page.params.locationSlug}`);
-    else history.back();
+    ) {
+      const url = buildUrl(`${$page.params.locationSlug}`);
+      goto(url);
+    } else history.back();
   };
 </script>
 

@@ -31,6 +31,7 @@
   import PaymentForm from "./PaymentForm.svelte";
   import { goto } from "$app/navigation";
   import { browser } from "$app/environment";
+  import { buildUrl } from "$src/services/buildNavigationUrl";
 
   type ErrorBookingNotPossible = "SLOT_NOT_AVAILABLE" | "WORKER_NOT_AVAILABLE";
 
@@ -120,7 +121,10 @@
   };
 
   onMount(async () => {
-    if (!$shopStore.bookingDate) goto("/" + $location.location.id);
+    if (!$shopStore.bookingDate) {
+      const url = buildUrl(String($location.location.id));
+      goto(url);
+    }
 
     const stripeKey = PUBLIC_STRIPE_KEY;
     if (stripeKey) {

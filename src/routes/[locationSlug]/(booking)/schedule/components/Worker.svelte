@@ -7,6 +7,7 @@
   import { languageTag } from "$src/lib/paraglide/runtime";
   import { shopStore } from "$src/lib/stores/basketStore";
   import { location } from "$src/lib/stores/location.store";
+  import { buildUrl } from "$src/services/buildNavigationUrl";
   import type { QueueInfo } from "$src/types/QueueLine";
   import { fly } from "svelte/transition";
 
@@ -18,10 +19,7 @@
   // export let isFree: boolean | undefined;
 
   function createRecapUrl() {
-    const newUrl =
-      languageTag().split("-")[0] !== "fr"
-        ? `/${languageTag().split("-")[0]}/${$location.location.id}/recap`
-        : `/${$location.location.id}/recap`;
+    const newUrl = buildUrl(`${$location.location.id}/recap`);
     const url = new URL(newUrl, $page.url.origin);
     url.searchParams.set("workerFilter", selectedWorkerId!.toString());
     url.searchParams.set("serviceId", $page.url.searchParams.get("serviceId")!);

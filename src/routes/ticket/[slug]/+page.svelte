@@ -23,7 +23,7 @@
   import * as m from "$lib/paraglide/messages.js";
 
   export let data;
-  console.log("data", data);
+
   const locationSlug = data.location.location.id;
 
   let ticket = data.ticket;

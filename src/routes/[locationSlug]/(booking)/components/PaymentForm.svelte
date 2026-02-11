@@ -28,6 +28,8 @@
 
   import { onDestroy, onMount } from "svelte";
   import type { PaymentMethod as LocationPaymentMethod } from "$src/types/Location";
+  import { buildUrl } from "$src/services/buildNavigationUrl";
+  import { languageTag } from "$src/lib/paraglide/runtime";
 
   enum PaymentStatus {
     Succeeded = "succeeded",
@@ -125,26 +127,23 @@
 
     return await response.json();
   }
-
-  const connectEventSourceToPaymentIntent = (paymentIntentId: string, slug: string) => {
+  console.log("window.location.origin", window.location);
+  const connectEventSourceToPaymentIntent = async (paymentIntentId: string, slug: string) => {
+    const res = await pay(paymentIntentId);
+    const url = buildUrl(`ticket/${slug}`);
+    if (res?.status && res.status === PaymentStatus.Succeeded) {
+      goto(url);
+    }
     if (eventSource != null) {
       eventSource.close();
       eventSource = null;
     }
 
-    console.log("paymentIntentId", paymentIntentId);
     eventSource = new EventSource(
       `${PUBLIC_CARDEN_API}/api/v3/stripe/payment-status?payment_intent_id=${paymentIntentId}`,
     );
 
     eventSource.onopen = async () => {
-      const res = await pay(paymentIntentId);
-      console.log("Initial payment status:", res?.status);
-
-      if (res?.status && res.status === PaymentStatus.Succeeded) {
-        goto(`/ticket/${slug}`);
-      }
-
       if (res && res?.status !== PaymentStatus.Succeeded) {
         isCreatingTicket = false;
         errorPaymentStatus = res.status;
@@ -155,7 +154,7 @@
       const parsedData = JSON.parse(e.data);
       console.log("Received SSE message:", parsedData);
       if (parsedData?.status && parsedData.status === PaymentStatus.Succeeded) {
-        goto(`/ticket/${slug}`);
+        goto(url);
       }
     };
     eventSource.onerror = (err) => {
@@ -260,7 +259,8 @@
         }
 
         const slug = body.payload.slug;
-        goto(`/ticket/${slug}`);
+        const url = buildUrl(`ticket/${slug}`);
+        goto(url);
       }
       isCreatingTicket = false;
     } catch (err) {
@@ -272,7 +272,9 @@
     if (paymentMethod === "credit-card") {
       const stripeKey = PUBLIC_STRIPE_KEY;
       if (stripeKey) {
-        stripe = await loadStripe(stripeKey);
+        stripe = await loadStripe(stripeKey, {
+          locale: languageTag().split("-")[0] as any,
+        });
 
         if (!stripe) {
           console.error("Stripe failed to load");
