@@ -481,7 +481,7 @@
   bind:popupTypeOpen={popupType}
   on:confirmAction={async () => {
     if (popupType === "CANCEL_RESERVATION") {
-      await fetch(`${PUBLIC_CARDEN_API}/api/v3/ticket/${ticket.id}/status`, {
+      await fetch(`${PUBLIC_CARDEN_API}/api/v2/ticket/${ticket.id}/status`, {
         method: "PATCH",
         credentials: "include",
         headers: {
