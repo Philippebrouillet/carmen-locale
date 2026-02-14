@@ -98,12 +98,12 @@
   };
 </script>
 
-<div class="flex gap-0">
-  <div
-    class="flex relative rounded-lg {valid
-      ? ``
-      : ` ring-pink-500 dark:ring-pink-500 ring-1 focus-within:ring-offset-1 focus-within:ring-offset-pink-500/50 focus-within:ring-1`}"
-  >
+<div
+  class="flex gap-0 rounded-lg {valid
+    ? ``
+    : ` ring-pink-500 dark:ring-pink-500 ring-1 focus-within:ring-offset-1 focus-within:ring-offset-pink-500/50 focus-within:ring-1`}"
+>
+  <div class="flex relative rounded-l-lg">
     <div class="flex" use:clickOutsideAction={closeOnClickOutside}>
       <button
         id="states-button"
@@ -196,16 +196,6 @@
     bind:valid
     {options}
     required
-    class="text-xs bg-white rounded-r-lg  w-full p-2.5  text-gray-900"
+    class="text-xs bg-white rounded-r-lg  w-full p-2.5  text-gray-900 z-[100]"
   />
 </div>
-
-<TelInput
-  bind:country={selectedCountry}
-  bind:detailedValue
-  bind:value
-  bind:valid
-  {options}
-  required
-  class="text-xs bg-white rounded-r-lg  w-full p-2.5  text-gray-900"
-/>
