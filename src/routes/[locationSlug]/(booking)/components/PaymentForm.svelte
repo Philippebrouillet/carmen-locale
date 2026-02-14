@@ -127,7 +127,7 @@
 
     return await response.json();
   }
-
+  console.log("window.location.origin", window.location);
   const connectEventSourceToPaymentIntent = async (paymentIntentId: string, slug: string) => {
     if (eventSource != null) {
       eventSource.close();
@@ -292,24 +292,30 @@
         }
 
         const elements = stripe.elements();
-        const style = {
-          base: {
-            color: "#32325d",
-            fontFamily: "Roboto, sans-serif",
-            fontSmoothing: "antialiased",
-            fontSize: "16px",
-            "::placeholder": {
+
+        card = elements.create("card", {
+          style: {
+            base: {
               color: "#32325d",
+              fontFamily: "Inter, sans-serif",
+              fontSmoothing: "antialiased",
+              fontSize: "16px",
+              "::placeholder": {
+                color: "#32325d",
+              },
+            },
+            invalid: {
+              fontFamily: "Inter, sans-serif",
+              color: "#fa755a",
+              iconColor: "#fa755a",
             },
           },
-          invalid: {
-            fontFamily: "Roboto, sans-serif",
-            color: "#fa755a",
-            iconColor: "#fa755a",
+          hidePostalCode: true,
+          classes: {
+            base: "w-full h-11 px-3 py-3 rounded-lg bg-white border border-gray-200 transition duration-200 ease-in-out",
+            focus: "outline-none ring-2 ring-accent ring-opacity-50",
           },
-        };
-
-        card = elements.create("card", { style, hidePostalCode: true });
+        });
         // Stripe injects an iframe into the DOM
 
         card.on("change", function (event) {
@@ -489,10 +495,7 @@
         {#if checkoutPaymentAvailable}
           <p class="text-center text-[#616163]">{m.orPayWithCard()}</p>
         {/if}
-        <div
-          id="card-element"
-          class="w-full h-11 px-3 py-3 rounded-lg bg-white border border-gray-200"
-        ></div>
+        <div id="card-element"></div>
       </div>
     {/if}
 

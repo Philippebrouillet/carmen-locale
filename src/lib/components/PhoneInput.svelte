@@ -103,92 +103,97 @@
     ? ``
     : ` ring-pink-500 dark:ring-pink-500 ring-1 focus-within:ring-offset-1 focus-within:ring-offset-pink-500/50 focus-within:ring-1`}"
 >
-  <div class="flex relative rounded-l-lg">
-    <div class="flex" use:clickOutsideAction={closeOnClickOutside}>
-      <button
-        id="states-button"
-        data-dropdown-toggle="dropdown-states"
-        class="relative flex-shrink-0 overflow-hidden whitespace-nowrap inline-flex bg-white items-center py-2.5 px-4 text-sm font-medium text-center text-gray-500 rounded-l-lg focus:outline-none"
-        type="button"
-        role="combobox"
-        aria-controls="dropdown-countries"
-        aria-expanded="false"
-        aria-haspopup="false"
-        on:click={toggleDropDown}
-      >
-        {#if selectedCountry && selectedCountry !== null}
-          <div class="inline-flex items-center text-left">
-            <span class="flag flag-{selectedCountry.toLowerCase()} flex-shrink-0 mr-3" />
-            {#if options.format === "national"}
-              <span class="text-xs text-gray-600">+{selectedCountryDialCode}</span>
-            {/if}
-          </div>
-        {:else}
-          Please select
-        {/if}
-        <svg
-          aria-hidden="true"
-          class="ml-1 w-4 h-4 {isOpen ? 'rotate-180' : ''}"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            fill-rule="evenodd"
-            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-            clip-rule="evenodd"
-          />
-        </svg>
-      </button>
-      {#if isOpen}
-        <div
-          id="dropdown-countries"
-          class="absolute z-10 max-w-fit bg-white rounded divide-y divide-gray-100 shadow overflow-hidden translate-y-11"
-          data-popper-reference-hidden=""
-          data-popper-escaped=""
-          data-popper-placement="bottom"
-          aria-orientation="vertical"
-          aria-labelledby="country-button"
-          tabindex="-1"
-        >
-          <div
-            class="text-sm text-gray-700 max-h-48 overflow-y-auto"
-            aria-labelledby="countries-button"
-            role="listbox"
-          >
-            <input
-              aria-autocomplete="list"
-              type="text"
-              class="px-4 py-2 text-gray-900 focus:outline-none w-full sticky top-0"
-              bind:value={searchText}
-              placeholder={searchPlaceholder}
-            />
-            {#each sortCountries(normalizedCountries, searchText) as country (country.id)}
-              {@const isActive = isSelected(country.iso2, selectedCountry)}
-              <div id="country-{country.iso2}" role="option" aria-selected={isActive}>
-                <button
-                  value={country.iso2}
-                  type="button"
-                  class="inline-flex py-2 px-4 w-full text-sm hover:bg-gray-100
-                             active:bg-gray-800 overflow-hidden
-                            {isActive ? 'bg-gray-600 ' : ''}"
-                  on:click={(e) => {
-                    handleSelect(country.iso2, e);
-                  }}
-                >
-                  <div class="inline-flex items-center text-left">
-                    <span class="flag flag-{country.iso2.toLowerCase()} flex-shrink-0 mr-3" />
-                    <span class="mr-2">{country.name}</span>
-                    <span class="text-gray-500">+{country.dialCode}</span>
-                  </div>
-                </button>
-              </div>
-            {/each}
-          </div>
+  <div class="flex" use:clickOutsideAction={closeOnClickOutside}>
+    <button
+      id="states-button"
+      data-dropdown-toggle="dropdown-states"
+      class="relative focus:outline-none focus:ring-2 focus:ring-accent focus:ring-opacity-50 transition duration-200 ease-in-out {isOpen
+        ? 'outline-none ring-2 ring-accent ring-opacity-50 transition duration-200 ease-in-out'
+        : ''} flex-shrink-0 overflow-hidden whitespace-nowrap inline-flex bg-white items-center py-2.5 px-4 text-sm font-medium text-center text-gray-500 rounded-l-lg"
+      type="button"
+      role="combobox"
+      aria-controls="dropdown-countries"
+      aria-expanded="false"
+      aria-haspopup="false"
+      on:click={toggleDropDown}
+    >
+      {#if selectedCountry && selectedCountry !== null}
+        <div class="inline-flex items-center text-left">
+          <span class="flag flag-{selectedCountry.toLowerCase()} flex-shrink-0 mr-3" />
+          {#if options.format === "national"}
+            <span class="text-xs text-gray-600">+{selectedCountryDialCode}</span>
+          {/if}
         </div>
+      {:else}
+        Please select
       {/if}
-    </div>
+      <svg
+        aria-hidden="true"
+        class="ml-1 w-4 h-4 {isOpen ? 'rotate-180' : ''}"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+          clip-rule="evenodd"
+        />
+      </svg>
+    </button>
+    {#if isOpen}
+      <div
+        id="dropdown-countries"
+        class="absolute z-10 max-w-fit bg-white rounded divide-y divide-gray-100 shadow overflow-hidden translate-y-11"
+        data-popper-reference-hidden=""
+        data-popper-escaped=""
+        data-popper-placement="bottom"
+        aria-orientation="vertical"
+        aria-labelledby="country-button"
+        tabindex="-1"
+      >
+        <div
+          class="text-sm text-gray-700 max-h-48 overflow-y-auto"
+          aria-labelledby="countries-button"
+          role="listbox"
+        >
+          <input
+            aria-autocomplete="list"
+            type="text"
+            class="px-4 py-2 text-gray-900 focus:outline-none w-full sticky top-0"
+            bind:value={searchText}
+            placeholder={searchPlaceholder}
+          />
+          {#each sortCountries(normalizedCountries, searchText) as country (country.id)}
+            {@const isActive = isSelected(country.iso2, selectedCountry)}
+            <div id="country-{country.iso2}" role="option" aria-selected={isActive}>
+              <button
+                value={country.iso2}
+                type="button"
+                class="inline-flex py-2 px-4 w-full text-sm hover:bg-gray-100
+                             active:bg-gray-800 overflow-hidden
+                            {isActive ? 'bg-gray-600 text-white ' : ''}"
+                on:click={(e) => {
+                  handleSelect(country.iso2, e);
+                }}
+              >
+                <div class="inline-flex items-center text-left">
+                  <span class="flag flag-{country.iso2.toLowerCase()} flex-shrink-0 mr-3" />
+                  <span class="mr-2">{country.name}</span>
+                  <span class=" {isActive ? 'text-white' : 'text-gray-500'}"
+                    >+{country.dialCode}</span
+                  >
+                </div>
+              </button>
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
   </div>
+
+  <div class="border-secondary/10 border"></div>
+
   <TelInput
     bind:country={selectedCountry}
     bind:detailedValue
@@ -196,6 +201,6 @@
     bind:valid
     {options}
     required
-    class="text-xs bg-white rounded-r-lg  w-full p-2.5  text-gray-900 z-[100]"
+    class="text-xs bg-white rounded-r-lg  w-full p-2.5  text-gray-900 z-[100] focus:outline-none focus:ring-2 focus:ring-accent focus:ring-opacity-50 transition duration-200 ease-in-out"
   />
 </div>
