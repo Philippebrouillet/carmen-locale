@@ -196,6 +196,16 @@
     bind:valid
     {options}
     required
-    class="text-xs bg-white rounded-r-lg block w-full p-2.5 focus:outline-none text-gray-900"
+    class="text-xs bg-white rounded-r-lg  w-full p-2.5  text-gray-900"
   />
 </div>
+
+<TelInput
+  bind:country={selectedCountry}
+  bind:detailedValue
+  bind:value
+  bind:valid
+  {options}
+  required
+  class="text-xs bg-white rounded-r-lg  w-full p-2.5  text-gray-900"
+/>
