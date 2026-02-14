@@ -263,5 +263,6 @@
   "workerNotAvailable": "للأسف، لم يعد {workerName} متاحًا، يُرجى تعديل حجزك.",
   "estimatedTimeOfPassage": "الوقت المتوقع للوصول",
   "morning": "صباح",
-  "afternoon": "بعد الظهر"
+  "afternoon": "بعد الظهر",
+  "noMoreSlotsToday": "لا توجد مواعيد متاحة."
 }

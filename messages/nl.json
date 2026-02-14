@@ -263,5 +263,6 @@
   "workerNotAvailable": "{workerName} is helaas niet meer beschikbaar. Pas uw reservering aan.",
   "estimatedTimeOfPassage": "Geschatte aankomsttijd",
   "morning": "Ochtend",
-  "afternoon": "Middag"
+  "afternoon": "Middag",
+  "noMoreSlotsToday": "Er zijn geen tijdslots beschikbaar."
 }

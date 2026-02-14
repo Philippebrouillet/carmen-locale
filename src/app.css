@@ -116,3 +116,32 @@
     @apply bg-background   text-foreground;
   }
 }
+
+/* ----- MOBILE ≤ 500px ----- */
+@media (max-width: 500px) {
+  /* cachée par défaut */
+  * {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE / old Edge */
+  }
+
+  *::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+
+  /* visible quand interaction */
+  *:hover {
+    scrollbar-width: thin;
+  }
+
+  *:hover::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *:hover::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 4px;
+  }
+}

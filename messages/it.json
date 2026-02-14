@@ -263,5 +263,6 @@
   "workerNotAvailable": "{workerName} purtroppo non è più disponibile, modifica la tua prenotazione",
   "estimatedTimeOfPassage": "Orario di arrivo stimato",
   "morning": "Mattina",
-  "afternoon": "Pomeriggio"
+  "afternoon": "Pomeriggio",
+  "noMoreSlotsToday": "Nessuna fascia oraria disponibile."
 }

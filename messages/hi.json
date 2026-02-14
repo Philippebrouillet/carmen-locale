@@ -263,5 +263,6 @@
   "workerNotAvailable": "{workerName} दुर्भाग्यवश अब उपलब्ध नहीं है, कृपया अपना आरक्षण संशोधित करें।",
   "estimatedTimeOfPassage": "आगमन का अनुमानित समय",
   "morning": "सुबह",
-  "afternoon": "दोपहर"
+  "afternoon": "दोपहर",
+  "noMoreSlotsToday": "कोई समय स्लॉट उपलब्ध नहीं है।"
 }

@@ -263,5 +263,6 @@
   "workerNotAvailable": "К сожалению, опция {workerName} больше недоступна. Пожалуйста, измените ваше бронирование.",
   "estimatedTimeOfPassage": "Ориентировочное время прибытия",
   "morning": "Утро",
-  "afternoon": "Полдень"
+  "afternoon": "Полдень",
+  "noMoreSlotsToday": "Свободных временных слотов нет."
 }

@@ -263,5 +263,6 @@
   "workerNotAvailable": "{workerName} is unfortunately no longer available, please modify your reservation",
   "estimatedTimeOfPassage": "Estimated time of arrival",
   "morning": "Morning",
-  "afternoon": "Afternoon"
+  "afternoon": "Afternoon",
+  "noMoreSlotsToday": "No time slots available."
 }

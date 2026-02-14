@@ -127,23 +127,25 @@
 
     return await response.json();
   }
-  console.log("window.location.origin", window.location);
+
   const connectEventSourceToPaymentIntent = async (paymentIntentId: string, slug: string) => {
-    const res = await pay(paymentIntentId);
-    const url = buildUrl(`ticket/${slug}`);
-    if (res?.status && res.status === PaymentStatus.Succeeded) {
-      goto(url);
-    }
     if (eventSource != null) {
       eventSource.close();
       eventSource = null;
     }
+
+    const url = buildUrl(`ticket/${slug}`);
 
     eventSource = new EventSource(
       `${PUBLIC_CARDEN_API}/api/v3/stripe/payment-status?payment_intent_id=${paymentIntentId}`,
     );
 
     eventSource.onopen = async () => {
+      const res = await pay(paymentIntentId);
+
+      if (res?.status && res.status === PaymentStatus.Succeeded) {
+        goto(url);
+      }
       if (res && res?.status !== PaymentStatus.Succeeded) {
         isCreatingTicket = false;
         errorPaymentStatus = res.status;
@@ -255,6 +257,12 @@
 
         if (paymentMethod === "credit-card" && stripe) {
           const clientSecret = await createPaymentIntent(body.payload.id);
+
+          if (clientSecret.error) {
+            errorMessage = "Failed to create payment intent. " + clientSecret.error;
+            isCreatingTicket = false;
+            return;
+          }
           connectEventSourceToPaymentIntent(clientSecret.id, body.payload.slug);
           return;
         }
@@ -319,7 +327,7 @@
           setTimeout(() => {
             el.scrollIntoView({
               behavior: "smooth",
-              block: "center",
+              block: "start",
             });
           }, 300);
         });
@@ -393,8 +401,6 @@
   });
 </script>
 
-<!-- {info.next.toISOString()}
-{$shopStore.bookingDate?.toISOString()} -->
 <div
   bind:this={drawerContent}
   class="flex flex-col p-4 pt-4 lg:p-8 gap-6 w-full overflow-y-scroll min-h-screen h-full md:h-[80vh] pb-[300px]"

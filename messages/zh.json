@@ -263,5 +263,6 @@
   "workerNotAvailable": "很抱歉， {workerName}已不再可用，请修改您的预订。",
   "estimatedTimeOfPassage": "预计到达时间",
   "morning": "早晨",
-  "afternoon": "下午"
+  "afternoon": "下午",
+  "noMoreSlotsToday": "目前没有可预约的时间段。"
 }

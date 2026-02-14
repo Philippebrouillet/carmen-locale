@@ -106,16 +106,30 @@
     afternoonSlots = createSlotDate("12:00", laterEndWorkerTime);
   }
 
-  const filterShowableWorkers = (workers, date) => {
-    return workers.filter((w) => {
-      const haveTicketInConflict = w.tickets.find((t) => {
-        if (!t.rdvTime || !t.durationS) return false;
-        const rdvDate = new Date(t.rdvTime);
-        const end = rdvDate.getTime() + t.durationS * 1000;
-        return date.getTime() > rdvDate.getTime() && date.getTime() < end;
-      });
+  // Vérifie si un travailleur a un ticket en conflit avec une date donnée
+  // Si end n'est pas fourni on vérifie si un slot est dispo
+  // sinon on vérifie si un créneau de la durée du service est dispo
+  const haveWorkerTicketInConflict = (w: any, date: Date, end?: Date) => {
+    return w.tickets.some((t: any) => {
+      if (!t.rdvTime || !t.durationS) return false;
 
-      return w.formatedStatus !== "unavailable" && !haveTicketInConflict;
+      const ticketStart = new Date(t.rdvTime).getTime();
+      const ticketEnd = ticketStart + t.durationS * 1000;
+
+      const newStart = date.getTime();
+      const newEnd = end ? end.getTime() : newStart;
+
+      // chevauchement
+      return newStart < ticketEnd && newEnd > ticketStart;
+    });
+  };
+
+  const filterShowableWorkers = (workers, date, forSlot?: boolean) => {
+    const serviceDuration = $shopStore.selectedService?.durationS ?? 0;
+    const end = forSlot ? undefined : new Date(date.getTime() + serviceDuration * 1000);
+    return workers.filter((w) => {
+      const haveConflitc = haveWorkerTicketInConflict(w, date, end);
+      return w.formatedStatus !== "unavailable" && !haveConflitc;
     });
   };
 
@@ -123,6 +137,7 @@
     const haveWorkerAvailable = filterShowableWorkers(
       computeQueue($location, new Date($clock), date),
       date,
+      true,
     );
     return haveWorkerAvailable.length > 0 ? true : false;
   };
@@ -144,9 +159,12 @@
       //   setBookingDelay(Number(firstAvailableDelay));
       // }
       const worker = allWorkers.find((w) => w.id == selectedWorkerId);
+      const serviceDuration = $shopStore.selectedService?.durationS ?? 0;
+      const now = new Date($clock);
+      const end = new Date(now.getTime() + serviceDuration * 1000);
 
       const firstAvailableDelay =
-        worker && worker.tickets.length > 0
+        worker && worker.tickets.length > 0 && haveWorkerTicketInConflict(worker, now, end)
           ? bookingDelays.reduce((closest, d) => {
               const delayDate = new Date(Date.now() + Number(d.time) * 60 * 1000);
 
@@ -219,7 +237,7 @@
   $: bgByTheme = backgroundColorByTheme[$location.location.theme];
 </script>
 
-<main class="w-full flex flex-col items-center md:items-start px-4">
+<div class="w-full flex flex-col items-center md:items-start px-4">
   <BookingHeader text={m.chooseArrivalTime()} />
 
   <div class="flex flex-col items-start md:items-start gap-4 w-full lg:w-[90%] xl:[60%] md:mt-0">
@@ -297,25 +315,37 @@
               class="flex flex-col gap-4 w-full py-6 pt-2 px-4 pb-4"
             >
               <TimeFilterTabs bind:selectedTimeFilter {bgByTheme} />
-              <div class="grid grid-cols-3 md:grid-cols-6 w-full gap-4">
-                {#each afterSlots as value}
-                  {@const stringValue = value.date.getTime().toString()}
-                  {@const isSelectedTime = selectedTime == stringValue}
-                  <button
-                    disabled={value.date.getTime() <= now.getTime() || !value.haveWorkerAvailable}
-                    class="w-full p-2 text-sm border rounded-lg transition-all duration-200 ease-in-out hover:bg-gray-100 hover:text-primary disabled:opacity-10 {isSelectedTime
-                      ? `${bgByTheme} text-primary-foreground `
-                      : 'bg-white'}"
-                    on:click={() => {
-                      selectedTime = stringValue;
-                      setBookingDate(value.date);
-                      setBookingDelay(0);
-                    }}
-                  >
-                    {value.date.toLocaleTimeString(languageTag(), { timeStyle: "short" })}
-                  </button>
-                {/each}
-              </div>
+
+              {#if afterSlots.every((slot) => slot.date.getTime() <= now.getTime())}
+                <div
+                  class="flex justify-center items-center w-full bg-[#DFE5E7] bg-opacity-30 rounded-xl p-4 text-sm text-[#616163] font-normal"
+                >
+                  <p>{m.noMoreSlotsToday()}</p>
+                </div>
+              {:else}
+                <div class="grid grid-cols-3 md:grid-cols-6 w-full gap-4">
+                  {#each afterSlots as value}
+                    {@const stringValue = value.date.getTime().toString()}
+                    {@const isSelectedTime = selectedTime == stringValue}
+                    {@const isDisabled = !value.haveWorkerAvailable}
+                    {@const isPast = value.date.getTime() <= now.getTime()}
+                    <button
+                      disabled={isDisabled}
+                      class:hidden={isPast}
+                      class="w-full p-2 text-sm border rounded-lg transition-all duration-200 ease-in-out hover:bg-gray-100 hover:text-primary disabled:opacity-10 {isSelectedTime
+                        ? `${bgByTheme} text-primary-foreground `
+                        : 'bg-white'}"
+                      on:click={() => {
+                        selectedTime = stringValue;
+                        setBookingDate(value.date);
+                        setBookingDelay(0);
+                      }}
+                    >
+                      {value.date.toLocaleTimeString(languageTag(), { timeStyle: "short" })}
+                    </button>
+                  {/each}
+                </div>
+              {/if}
             </div>
           {/if}
         </div>
@@ -386,4 +416,4 @@
       {m.noAvailableProfessionalsMessage()}
     {/if}
   </div>
-</main>
+</div>

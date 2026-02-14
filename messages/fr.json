@@ -263,5 +263,6 @@
   "workerNotAvailable": "{workerName} n’est malheureusement plus disponible, merci de modifier votre réservation",
   "estimatedTimeOfPassage": "Heure de passage estimée",
   "morning": "Matin",
-  "afternoon": "Après-midi"
+  "afternoon": "Après-midi",
+  "noMoreSlotsToday": "Aucun créneau disponible."
 }
