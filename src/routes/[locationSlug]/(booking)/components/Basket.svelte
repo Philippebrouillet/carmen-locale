@@ -14,7 +14,12 @@
   import { shopStore } from "$lib/stores/basketStore";
   import { location } from "$src/lib/stores/location.store";
   import BookingHeader from "./BookingHeader.svelte";
-  import type { LocationPaymentMode, LocationTheme, PaymentMethod } from "$src/types/Location";
+  import type {
+    LocationPaymentMode,
+    LocationTheme,
+    PaymentMethod,
+    WorkerInfo,
+  } from "$src/types/Location";
   import {
     Clock3,
     Dock,
@@ -35,26 +40,35 @@
 
   type ErrorBookingNotPossible = "SLOT_NOT_AVAILABLE" | "WORKER_NOT_AVAILABLE";
 
-  $: workerTickets = $location.workers
-    .filter((w) => w.id === $shopStore.selectedProfessional?.id)
-    .flatMap((w) => w.tickets)
-    .filter((t) => t.doneTime === null && t.canceledTime === null);
-
-  $: newStart = $shopStore?.bookingDate?.getTime();
-  $: newEnd =
-    newStart && selectedService?.durationS ? newStart + selectedService.durationS * 1000 : 0;
-
-  let errorBookingNotPossible: ErrorBookingNotPossible | undefined = undefined;
-  $: newStart, newEnd, workerTickets, (errorBookingNotPossible = handleErrorBookingNotPossible());
-
-  $: errorMessageBookingNotPossibleByError = {
-    SLOT_NOT_AVAILABLE: m.slotNotAvailable(),
-    WORKER_NOT_AVAILABLE: m.workerNotAvailable(selectedProfessional?.name),
+  const iconColorByTheme: Record<LocationTheme, string> = {
+    NEUTRAL: "text-primary",
+    PINK: "text-pink",
+    CARDEN: "text-blue",
   };
 
-  $: errorMessageBookingNotPossible = errorBookingNotPossible
-    ? errorMessageBookingNotPossibleByError[errorBookingNotPossible]
-    : undefined;
+  const backgroundByTheme: Record<LocationTheme, string> = {
+    NEUTRAL: "bg-[#F8FAFD]",
+    PINK: "bg-[#FFF5FA]",
+    CARDEN: "bg-[#F8FAFD]",
+  };
+
+  const backgroundColorFeeByTheme: Record<LocationTheme, string> = {
+    NEUTRAL: "bg-[#DFE5E7]",
+    PINK: "bg-[#E5CEF7]",
+    CARDEN: "bg-[#C7E0FF]",
+  };
+
+  let errorMessageBookingNotPossibleByError = {
+    SLOT_NOT_AVAILABLE: "",
+    WORKER_NOT_AVAILABLE: "",
+  };
+  let paymentMode: LocationPaymentMode = $location.config.payment_mode;
+  let isCreatingTicket = false;
+  let isPaymentPopupOpen = false;
+  let popupTypeOpen: PopupType | null = null;
+  let paymentMethod: PaymentMethod = ["ONLINE_FULL", "ONLINE_UPFRONT_FEE"].includes(paymentMode)
+    ? "credit-card"
+    : "in-store";
 
   const handleErrorBookingNotPossible = (): ErrorBookingNotPossible | undefined => {
     if (selectedProfessional && selectedProfessional.status !== "AVAILABLE")
@@ -76,9 +90,45 @@
 
     return undefined;
   };
+  const openPopupInfo = (type: PopupType) => {
+    popupTypeOpen = type;
+  };
 
-  let paymentMode: LocationPaymentMode = $location.config.payment_mode;
-  let isCreatingTicket = false;
+  onMount(async () => {
+    if (!$shopStore.bookingDate) {
+      const url = buildUrl(String($location.location.id));
+      goto(url);
+    }
+
+    errorMessageBookingNotPossibleByError = {
+      SLOT_NOT_AVAILABLE: m.slotNotAvailable(),
+      WORKER_NOT_AVAILABLE: m.workerNotAvailable({ workerName: selectedProfessional?.name }),
+    };
+  });
+
+  let selectedProfessional: WorkerInfo | undefined = undefined;
+  $: selectedProfessional = $location.workers.find(
+    (w) => w.id === $shopStore.selectedProfessional?.id,
+  );
+  $: workerTickets = $location.workers
+    .filter((w) => w.id === $shopStore.selectedProfessional?.id)
+    .flatMap((w) => w.tickets)
+    .filter((t) => t.doneTime === null && t.canceledTime === null);
+
+  $: newStart = $shopStore?.bookingDate?.getTime();
+  $: newEnd =
+    newStart && selectedService?.durationS ? newStart + selectedService.durationS * 1000 : 0;
+
+  let errorBookingNotPossible: ErrorBookingNotPossible | undefined = undefined;
+  $: $location,
+    newStart,
+    newEnd,
+    workerTickets,
+    (errorBookingNotPossible = handleErrorBookingNotPossible());
+
+  $: errorMessageBookingNotPossible = errorBookingNotPossible
+    ? errorMessageBookingNotPossibleByError[errorBookingNotPossible]
+    : undefined;
 
   $: minimumServiceFeeInCents = $location.config.minimum_service_fee; // 90 // 0.90
   $: accomptePrice =
@@ -91,49 +141,8 @@
       ? $location.config.service_fee_eur
       : (priceWithDiscountPrice * $location.config.service_fee_percent) / 100;
 
-  const iconColorByTheme: Record<LocationTheme, string> = {
-    NEUTRAL: "text-primary",
-    PINK: "text-pink",
-    CARDEN: "text-blue",
-  };
-
-  const backgroundByTheme: Record<LocationTheme, string> = {
-    NEUTRAL: "bg-[#F8FAFD]",
-    PINK: "bg-[#FFF5FA]",
-    CARDEN: "bg-[#F8FAFD]",
-  };
-
-  const backgroundColorFeeByTheme: Record<LocationTheme, string> = {
-    NEUTRAL: "bg-[#DFE5E7]",
-    PINK: "bg-[#E5CEF7]",
-    CARDEN: "bg-[#C7E0FF]",
-  };
-
-  let isPaymentPopupOpen = false;
-  let stripe: Stripe | null = null;
-  let popupTypeOpen: PopupType | null = null;
-  let paymentMethod: PaymentMethod = ["ONLINE_FULL", "ONLINE_UPFRONT_FEE"].includes(paymentMode)
-    ? "credit-card"
-    : "in-store";
-
-  const openPopupInfo = (type: PopupType) => {
-    popupTypeOpen = type;
-  };
-
-  onMount(async () => {
-    if (!$shopStore.bookingDate) {
-      const url = buildUrl(String($location.location.id));
-      goto(url);
-    }
-
-    const stripeKey = PUBLIC_STRIPE_KEY;
-    if (stripeKey) {
-      stripe = await loadStripe(stripeKey);
-    }
-  });
-
   $: bookingTime = $shopStore.bookingDate;
-  $: selectedProfessional = $shopStore.selectedProfessional;
+
   $: selectedService = $shopStore.selectedService;
   $: theme = $location.location.theme;
   $: iconColor = iconColorByTheme[theme];

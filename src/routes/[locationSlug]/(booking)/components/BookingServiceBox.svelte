@@ -38,7 +38,7 @@
         <span>{m.professional()}</span>
 
         <span class={workerNotAvailable ? "text-[#FF834D] " : ""}>
-          {selectedProfessional ? selectedProfessional.name : m.anyProfessional()}
+          {selectedProfessional?.name ? selectedProfessional.name : m.anyProfessional()}
           {#if workerNotAvailable}
             <span>({m.unavailableShort()})</span>
           {/if}

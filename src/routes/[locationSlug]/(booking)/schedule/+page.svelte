@@ -18,6 +18,7 @@
   import BadgeTarifMode from "$src/lib/components/BadgeTarifMode.svelte";
   import { backgroundColorByTheme } from "$src/services/Location";
   import type { BookingMode } from "$src/types/Location";
+  import type { QueueInfo } from "$src/types/QueueLine";
 
   export let data;
 
@@ -109,7 +110,7 @@
   // Vérifie si un travailleur a un ticket en conflit avec une date donnée
   // Si end n'est pas fourni on vérifie si un slot est dispo
   // sinon on vérifie si un créneau de la durée du service est dispo
-  const haveWorkerTicketInConflict = (w: any, date: Date, end?: Date) => {
+  const haveWorkerTicketInConflict = (w: QueueInfo, date: Date, end?: Date) => {
     return w.tickets.some((t: any) => {
       if (!t.rdvTime || !t.durationS) return false;
 
@@ -124,12 +125,16 @@
     });
   };
 
-  const filterShowableWorkers = (workers, date, forSlot?: boolean) => {
+  const filterShowableWorkers = (workers: QueueInfo[], date: Date, forSlot?: boolean) => {
     const serviceDuration = $shopStore.selectedService?.durationS ?? 0;
     const end = forSlot ? undefined : new Date(date.getTime() + serviceDuration * 1000);
     return workers.filter((w) => {
       const haveConflitc = haveWorkerTicketInConflict(w, date, end);
-      return w.formatedStatus !== "unavailable" && !haveConflitc;
+      const isEndOfPrestationBeforeWorkerEndWork = end ? end < w.endWorkerDate : true;
+
+      return (
+        w.formatedStatus !== "unavailable" && !haveConflitc && isEndOfPrestationBeforeWorkerEndWork
+      );
     });
   };
 
@@ -151,47 +156,56 @@
   };
 
   onMount(() => {
-    if (["DAY", "3H"].includes(bookingMode)) {
-      setShowableBookingDelays();
+    setTimeout(() => {
+      if (["DAY", "3H"].includes(bookingMode)) {
+        setShowableBookingDelays();
 
-      // const firstAvailableDelay = bookingDelays.find((d) => d.haveWorkerAvailable)?.time;
-      // if (firstAvailableDelay) {
-      //   setBookingDelay(Number(firstAvailableDelay));
-      // }
-      const worker = allWorkers.find((w) => w.id == selectedWorkerId);
-      const serviceDuration = $shopStore.selectedService?.durationS ?? 0;
-      const now = new Date($clock);
-      const end = new Date(now.getTime() + serviceDuration * 1000);
+        const worker = allWorkers.find((w) => w.id == selectedWorkerId);
+        const serviceDuration = $shopStore.selectedService?.durationS ?? 0;
 
-      const firstAvailableDelay =
-        worker && worker.tickets.length > 0 && haveWorkerTicketInConflict(worker, now, end)
-          ? bookingDelays.reduce((closest, d) => {
-              const delayDate = new Date(Date.now() + Number(d.time) * 60 * 1000);
+        const now = new Date($clock);
+        const end = new Date(now.getTime() + serviceDuration * 1000);
 
-              const diff = Math.abs(delayDate.getTime() - worker.nextAvailable.next.getTime());
+        const isEndOfPrestationAfterWorkerEndWork = end > worker?.endWorkerDate;
 
-              if (!closest || diff < closest.diff) {
-                return { time: d.time, diff };
-              }
+        const firstAvailableDelay =
+          worker &&
+          !isEndOfPrestationAfterWorkerEndWork &&
+          worker.tickets.length > 0 &&
+          haveWorkerTicketInConflict(worker, now, end)
+            ? bookingDelays.reduce((closest, d) => {
+                const delayDate = new Date(Date.now() + Number(d.time) * 60 * 1000);
 
-              return closest;
-            }, null)?.time
-          : bookingDelays.find((d) => d.haveWorkerAvailable)?.time;
+                const diff = Math.abs(delayDate.getTime() - worker.nextAvailable.next.getTime());
 
-      if (firstAvailableDelay) {
-        setBookingDelay(Number(firstAvailableDelay));
+                if (!closest || diff < closest.diff) {
+                  return { time: d.time, diff };
+                }
+
+                return closest;
+              }, null)?.time
+            : bookingDelays.find((d) => d.haveWorkerAvailable)?.time;
+
+        if (isEndOfPrestationAfterWorkerEndWork) {
+          selectedWorkerId = null;
+          window.localStorage.removeItem("workerFilter");
+        }
+
+        if (firstAvailableDelay) {
+          setBookingDelay(Number(firstAvailableDelay));
+        }
       }
-    }
-    if (selectedWorkerId) {
-      const selectedWorker = workers.find((w) => w.id == selectedWorkerId);
-      if (selectedWorker?.nextAvailable?.next)
-        shopStore.update((store) => {
-          return {
-            ...store,
-            bookingDate: selectedWorker.nextAvailable?.next,
-          };
-        });
-    }
+      if (selectedWorkerId) {
+        const selectedWorker = workers.find((w) => w.id == selectedWorkerId);
+        if (selectedWorker?.nextAvailable?.next)
+          shopStore.update((store) => {
+            return {
+              ...store,
+              bookingDate: selectedWorker.nextAvailable?.next,
+            };
+          });
+      }
+    }, 0);
   });
 
   $: appointmentTimes = computeAppointmentTimes(now, selectedDay, $location.planning);
@@ -214,10 +228,10 @@
   // $: workers = computeQueue($location, new Date($clock), start, serviceDuration).filter(
   //   (w) => !["DISABLED", "STOPED"].includes(w.status),
   // );
-
+  let workers: QueueInfo[] = [];
   $: $location, $clock, setShowableBookingDelays();
   $: allWorkers = computeQueue($location, new Date($clock), start);
-  $: workers = filterShowableWorkers(allWorkers, start);
+  $: $shopStore, (workers = filterShowableWorkers(allWorkers, start));
 
   $: if (appointmentOptionSelected == false) {
     setBookingDate(today(getLocalTimeZone()).toDate(getLocalTimeZone()));

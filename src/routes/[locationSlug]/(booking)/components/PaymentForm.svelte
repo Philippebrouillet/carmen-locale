@@ -62,7 +62,7 @@
         return { title: m.paymentDefaultTitle(), description: m.paymentDefaultDescription() };
     }
   };
-  let drawerContent: HTMLDivElement;
+
   let card: StripeCardElement;
   let disableButton = true;
   let isCardElementCompleted = false;
@@ -127,14 +127,29 @@
 
     return await response.json();
   }
-  console.log("window.location.origin", window.location);
+
+  const handlePaymentStatus = (status: PaymentStatus | undefined, successUrl: string) => {
+    if (status !== undefined) {
+      switch (status) {
+        case PaymentStatus.Succeeded: {
+          goto(successUrl);
+          break;
+        }
+        default: {
+          isCreatingTicket = false;
+          errorPaymentStatus = status;
+          break;
+        }
+      }
+    }
+  };
+
   const connectEventSourceToPaymentIntent = async (paymentIntentId: string, slug: string) => {
     if (eventSource != null) {
       eventSource.close();
       eventSource = null;
     }
-
-    const url = buildUrl(`ticket/${slug}`);
+    const successUrl = buildUrl(`ticket/${slug}`);
 
     eventSource = new EventSource(
       `${PUBLIC_CARDEN_API}/api/v3/stripe/payment-status?payment_intent_id=${paymentIntentId}`,
@@ -142,22 +157,12 @@
 
     eventSource.onopen = async () => {
       const res = await pay(paymentIntentId);
-
-      if (res?.status && res.status === PaymentStatus.Succeeded) {
-        goto(url);
-      }
-      if (res && res?.status !== PaymentStatus.Succeeded) {
-        isCreatingTicket = false;
-        errorPaymentStatus = res.status;
-        return;
-      }
+      handlePaymentStatus(res?.status, successUrl);
     };
     eventSource.onmessage = async (e) => {
       const parsedData = JSON.parse(e.data);
       console.log("Received SSE message:", parsedData);
-      if (parsedData?.status && parsedData.status === PaymentStatus.Succeeded) {
-        goto(url);
-      }
+      handlePaymentStatus(parsedData?.status, successUrl);
     };
     eventSource.onerror = (err) => {
       console.error(`[!] sse error ${err}`);
@@ -408,8 +413,7 @@
 </script>
 
 <div
-  bind:this={drawerContent}
-  class="flex flex-col p-4 pt-4 lg:p-8 gap-6 w-full overflow-y-scroll min-h-screen h-full md:h-[80vh] pb-[300px]"
+  class="flex flex-col p-4 pt-4 lg:p-8 gap-6 w-full overflow-y-scroll min-h-screen h-full md:h-[80vh] pb-[400px]"
 >
   {#if paymentErrorTexts}
     <div class="bg-[#DFE5E7] bg-opacity-30 rounded-xl text-[#A03203] p-4 w-full">
