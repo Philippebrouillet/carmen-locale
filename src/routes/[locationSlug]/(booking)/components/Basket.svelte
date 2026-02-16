@@ -1,8 +1,6 @@
 <script lang="ts">
-  import { PUBLIC_STRIPE_KEY } from "$env/static/public";
   import { Button } from "$lib/components/ui/button";
   import { displayPriceInDollars } from "$lib/formater";
-  import { loadStripe, type Stripe } from "@stripe/stripe-js";
   import { onMount } from "svelte";
   import * as Drawer from "$lib/components/ui/drawer";
   import BookingServiceBox from "./BookingServiceBox.svelte";
@@ -14,12 +12,7 @@
   import { shopStore } from "$lib/stores/basketStore";
   import { location } from "$src/lib/stores/location.store";
   import BookingHeader from "./BookingHeader.svelte";
-  import type {
-    LocationPaymentMode,
-    LocationTheme,
-    PaymentMethod,
-    WorkerInfo,
-  } from "$src/types/Location";
+  import type { LocationPaymentMode, LocationTheme, PaymentMethod } from "$src/types/Location";
   import {
     Clock3,
     Dock,
@@ -37,6 +30,8 @@
   import { goto } from "$app/navigation";
   import { browser } from "$app/environment";
   import { buildUrl } from "$src/services/buildNavigationUrl";
+  import { computeQueue } from "$src/services/QueueLine";
+  import { clock } from "$src/lib/stores/clock.svelte";
 
   type ErrorBookingNotPossible = "SLOT_NOT_AVAILABLE" | "WORKER_NOT_AVAILABLE";
 
@@ -71,13 +66,26 @@
     : "in-store";
 
   const handleErrorBookingNotPossible = (): ErrorBookingNotPossible | undefined => {
-    if (selectedProfessional && selectedProfessional.status !== "AVAILABLE")
+    const workerDataWithEndWorkerTime = allWorkers.find(
+      (w) => w.id === $shopStore.selectedProfessional?.id,
+    );
+
+    if (
+      (selectedProfessional && selectedProfessional.status !== "AVAILABLE") ||
+      (workerDataWithEndWorkerTime &&
+        $shopStore?.bookingDate &&
+        $shopStore?.bookingDate > workerDataWithEndWorkerTime?.endWorkerDate)
+    )
       return "WORKER_NOT_AVAILABLE";
 
     const isBooked =
       newStart && newEnd
         ? workerTickets.some((t) => {
-            const start = t?.expectedTime ? t?.expectedTime?.getTime() : t?.rdvTime?.getTime();
+            const start = t?.expectedTime
+              ? new Date(t.expectedTime)?.getTime()
+              : t.rdvTime
+                ? new Date(t.rdvTime).getTime()
+                : 0;
             if (!start) return false;
             const end = start + t.durationS * 1000;
             return newStart <= end && newEnd >= start;
@@ -102,11 +110,12 @@
 
     errorMessageBookingNotPossibleByError = {
       SLOT_NOT_AVAILABLE: m.slotNotAvailable(),
-      WORKER_NOT_AVAILABLE: m.workerNotAvailable({ workerName: selectedProfessional?.name }),
+      WORKER_NOT_AVAILABLE: m.workerNotAvailable({
+        workerName: $shopStore.selectedProfessional?.name,
+      }),
     };
   });
 
-  let selectedProfessional: WorkerInfo | undefined = undefined;
   $: selectedProfessional = $location.workers.find(
     (w) => w.id === $shopStore.selectedProfessional?.id,
   );
@@ -118,7 +127,9 @@
   $: newStart = $shopStore?.bookingDate?.getTime();
   $: newEnd =
     newStart && selectedService?.durationS ? newStart + selectedService.durationS * 1000 : 0;
-
+  $: allWorkers = $shopStore?.bookingDate
+    ? computeQueue($location, new Date($clock), $shopStore?.bookingDate)
+    : [];
   let errorBookingNotPossible: ErrorBookingNotPossible | undefined = undefined;
   $: $location,
     newStart,
