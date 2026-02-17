@@ -125,10 +125,14 @@
     });
   };
 
-  const filterShowableWorkers = (workers: QueueInfo[], date: Date, forSlot?: boolean) => {
+  const filterShowableWorkers = (workers: QueueInfo[], date: Date) => {
     const serviceDuration = $shopStore.selectedService?.durationS ?? 0;
-    const end = forSlot ? undefined : new Date(date.getTime() + serviceDuration * 1000);
+
     return workers.filter((w) => {
+      const nextAvailability = new Date(
+        date < w?.nextAvailable?.next ? w?.nextAvailable?.next : date,
+      );
+      const end = new Date(nextAvailability.getTime() + serviceDuration * 1000);
       const haveConflitc = haveWorkerTicketInConflict(w, date, end);
       const isEndOfPrestationBeforeWorkerEndWork = end ? end < w.endWorkerDate : true;
 
@@ -163,8 +167,8 @@
         const worker = allWorkers.find((w) => w.id == selectedWorkerId);
         const serviceDuration = $shopStore.selectedService?.durationS ?? 0;
 
-        const now = new Date($clock);
-        const end = new Date(now.getTime() + serviceDuration * 1000);
+        const nextAvailability = new Date(worker?.nextAvailable?.next ?? Date.now());
+        const end = new Date(nextAvailability.getTime() + serviceDuration * 1000);
 
         const isEndOfPrestationAfterWorkerEndWork = end > worker?.endWorkerDate;
 
@@ -172,7 +176,7 @@
           worker &&
           !isEndOfPrestationAfterWorkerEndWork &&
           worker.tickets.length > 0 &&
-          haveWorkerTicketInConflict(worker, now, end)
+          haveWorkerTicketInConflict(worker, nextAvailability, end)
             ? bookingDelays.reduce((closest, d) => {
                 const delayDate = new Date(Date.now() + Number(d.time) * 60 * 1000);
 
@@ -205,7 +209,7 @@
             };
           });
       }
-    }, 0);
+    }, 50);
   });
 
   $: appointmentTimes = computeAppointmentTimes(now, selectedDay, $location.planning);
