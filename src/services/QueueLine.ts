@@ -28,7 +28,7 @@ export function computeQueue(
     let doneTickets = workerTickets
       .map((t) => t.canceledTime || t.doneTime)
       .filter((d) => d != null)
-      .map((d) => d.getTime());
+      .map((d) => new Date(d).getTime());
     let waitingTickets = workerTickets.filter((t) => t.doneTime == null && t.canceledTime == null);
     let waitingSince = doneTickets.length > 0 ? new Date(Math.max(...doneTickets)) : null;
 
@@ -133,7 +133,7 @@ export function nextAvailableTime(
 } {
   // We only keep ticket that are not RDV for current day
   if (!sameDay(now, start)) {
-    tickets = tickets.filter((t) => t.rdvTime && t.rdvTime.getTime() > start.getTime());
+    tickets = tickets.filter((t) => t.rdvTime && new Date(t.rdvTime).getTime() > start.getTime());
   }
 
   const withTime = ticketsWithTime(tickets, now);

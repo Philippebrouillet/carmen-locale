@@ -81,14 +81,16 @@
     const isBooked =
       newStart && newEnd
         ? workerTickets.some((t) => {
-            const start = t?.expectedTime
-              ? new Date(t.expectedTime)?.getTime()
-              : t.rdvTime
-                ? new Date(t.rdvTime).getTime()
-                : 0;
+            const start = t?.startedTime
+              ? new Date(t.startedTime).getTime()
+              : t?.expectedTime
+                ? new Date(t.expectedTime)?.getTime()
+                : t.rdvTime
+                  ? new Date(t.rdvTime).getTime()
+                  : 0;
             if (!start) return false;
             const end = start + t.durationS * 1000;
-            return newStart <= end && newEnd >= start;
+            return newStart < end && newEnd > start;
           })
         : false;
 

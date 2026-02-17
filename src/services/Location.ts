@@ -75,6 +75,7 @@ export const formatTickets = (tickets: ServerTicketInfo[]) => {
       doneTime: t.doneTime ? new Date(t.doneTime) : null,
       rdvTime: t.rdvTime ? new Date(t.rdvTime) : null,
       startedTime: t.startedTime ? new Date(t.startedTime) : null,
+      expectedTime: t?.expectedTime ? new Date(t.expectedTime) : null,
       details: t.details,
     };
   });

@@ -24,6 +24,7 @@
     type Stripe,
     type StripeCardElement,
     type PaymentMethod,
+    type PaymentIntent,
   } from "@stripe/stripe-js";
 
   import { onDestroy, onMount } from "svelte";
@@ -31,27 +32,25 @@
   import { buildUrl } from "$src/services/buildNavigationUrl";
   import { languageTag } from "$src/lib/paraglide/runtime";
 
-  enum PaymentStatus {
-    Succeeded = "succeeded",
-    RequiresPaymentMethod = "requiresPaymentMethod",
-    RequiresConfirmation = "requiresConfirmation",
-    RequiresAction = "requiresAction",
-    Processing = "processing",
-    Canceled = "canceled",
-  }
+  type PaymentIntentStatus = Exclude<
+    PaymentIntent["status"],
+    "requires_capture" | "requires_confirmation"
+  >;
 
   export let paymentMethod: LocationPaymentMethod;
   export let finalPriceToPay: number;
   export let isCreatingTicket: boolean = false;
 
-  const handlePaymentTextErrorByPaymentStatus = (status: Exclude<PaymentStatus, "succeded">) => {
+  const handlePaymentTextErrorByPaymentStatus = (
+    status: Exclude<PaymentIntentStatus, "succeded">,
+  ) => {
     switch (status) {
-      case "requiresPaymentMethod":
+      case "requires_payment_method":
         return {
           title: m.paymentRequiresPaymentMethodTitle(),
           description: m.paymentRequiresPaymentMethodDescription(),
         };
-      case "requiresAction":
+      case "requires_action":
         return {
           title: m.paymentRequiresActionTitle(),
           description: m.paymentRequiresActionDescription(),
@@ -77,7 +76,7 @@
   let delay = $shopStore.bookingDelay;
   let checkoutPaymentAvailable = false;
   let cardError = "";
-  let errorPaymentStatus: Exclude<PaymentStatus, "succeeded"> | undefined;
+  let errorPaymentStatus: Exclude<PaymentIntentStatus, "succeeded"> | undefined;
 
   $: paymentErrorTexts = errorPaymentStatus
     ? handlePaymentTextErrorByPaymentStatus(errorPaymentStatus)
@@ -128,48 +127,65 @@
     return await response.json();
   }
 
-  const handlePaymentStatus = (status: PaymentStatus | undefined, successUrl: string) => {
+  const handlePaymentStatus = (status: PaymentIntentStatus | undefined, successUrl: string) => {
+    let error = false;
     if (status !== undefined) {
       switch (status) {
-        case PaymentStatus.Succeeded: {
+        case "succeeded": {
           goto(successUrl);
           break;
         }
         default: {
+          error = true;
           isCreatingTicket = false;
           errorPaymentStatus = status;
+          const paymentform = document.getElementById("payment-form-container");
+          if (paymentform) {
+            setTimeout(() => {
+              paymentform.scrollTo({ top: 0 });
+            }, 50);
+          }
+          closeEventSource();
           break;
         }
       }
     }
+    return error;
   };
 
-  const connectEventSourceToPaymentIntent = async (paymentIntentId: string, slug: string) => {
+  const closeEventSource = () => {
     if (eventSource != null) {
       eventSource.close();
       eventSource = null;
     }
+  };
+
+  const connectEventSourceToPaymentIntent = async (paymentIntentId: string, slug: string) => {
+    closeEventSource();
     const successUrl = buildUrl(`ticket/${slug}`);
+
+    const res = await pay(paymentIntentId);
+    const error = handlePaymentStatus(res?.status, successUrl);
+    if (error) return;
 
     eventSource = new EventSource(
       `${PUBLIC_CARDEN_API}/api/v3/stripe/payment-status?payment_intent_id=${paymentIntentId}`,
     );
 
-    eventSource.onopen = async () => {
-      const res = await pay(paymentIntentId);
-      handlePaymentStatus(res?.status, successUrl);
-    };
     eventSource.onmessage = async (e) => {
       const parsedData = JSON.parse(e.data);
       console.log("Received SSE message:", parsedData);
-      handlePaymentStatus(parsedData?.status, successUrl);
+      const error = handlePaymentStatus(parsedData?.status, successUrl);
+      if (error) return;
     };
     eventSource.onerror = (err) => {
       console.error(`[!] sse error ${err}`);
     };
   };
 
-  async function pay(paymentIntentId: string): Promise<{ status: PaymentStatus } | undefined> {
+  async function pay(
+    paymentIntentId: string,
+  ): Promise<{ status: PaymentIntentStatus } | undefined> {
     if (!stripe || !paymentIntentId) {
       console.error("Stripe.js has not loaded yet.");
       return;
@@ -189,20 +205,25 @@
     }
 
     if (_paymentMethod) {
-      const response = await fetch(`${PUBLIC_CARDEN_API}/api/v4/stripe/test/pay`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          paymentIntentId: paymentIntentId,
-          paymentMethodId: _paymentMethod.id,
-          locationId: $location.location.id,
-        }),
-      });
+      try {
+        const response = await fetch(`${PUBLIC_CARDEN_API}/api/v4/stripe/test/pay`, {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            paymentIntentId: paymentIntentId,
+            paymentMethodId: _paymentMethod.id,
+            locationId: $location.location.id,
+          }),
+        });
+        console.log("response", response);
 
-      return await response.json();
+        return await response.json();
+      } catch (err) {
+        console.error("Payment request failed", err);
+      }
     }
   }
 
@@ -405,14 +426,12 @@
     if (stripe && card) {
       card.destroy();
     }
-    if (eventSource != null) {
-      eventSource.close();
-      eventSource = null;
-    }
+    closeEventSource();
   });
 </script>
 
 <div
+  id="payment-form-container"
   class="flex flex-col p-4 pt-4 lg:p-8 gap-6 w-full overflow-y-scroll min-h-screen h-full md:h-[80vh] pb-[400px]"
 >
   {#if paymentErrorTexts}

@@ -55,7 +55,7 @@
             id: t.id,
             workerId: t.doctorId,
             durationS: t.durationS,
-            expectedTime: new Date(t.expectedTime),
+            expectedTime: t.expectedTime ? new Date(t.expectedTime) : null,
             canceledTime: t.canceledTime ? new Date(t.canceledTime) : null,
             doneTime: t.doneTime ? new Date(t.doneTime) : null,
             rdvTime: t.rdvTime ? new Date(t.rdvTime) : null,

@@ -33,6 +33,7 @@ export type ServerTicketInfo = {
   doneTime: number | null;
   rdvTime: number | null;
   startedTime: number | null;
+  expectedTime: string | null;
   details: object | null;
 };
 
