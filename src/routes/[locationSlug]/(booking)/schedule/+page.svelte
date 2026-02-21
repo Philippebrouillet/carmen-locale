@@ -386,7 +386,7 @@
     </div>
 
     {#if selectedWorker.length || otherWorkers.length}
-      <div class="flex flex-col gap-4 w-full overflow-hidden">
+      <div class="flex flex-col gap-4 w-full overflow-x-hidden">
         {#if selectedWorkerId}
           <!-- SELECTED WORKER  -->
           {#each selectedWorker as w, i}
