@@ -255,7 +255,7 @@
   $: bgByTheme = backgroundColorByTheme[$location.location.theme];
 </script>
 
-<div class="w-full flex flex-col items-center md:items-start px-4 pb-6">
+<div class="w-full flex flex-col items-center md:items-start px-4 pb-20">
   <BookingHeader text={m.chooseArrivalTime()} />
 
   <div class="flex flex-col items-start md:items-start gap-4 w-full lg:w-[90%] xl:[60%] md:mt-0">
