@@ -3,6 +3,7 @@
   import { shopStore } from "$src/lib/stores/basketStore";
   import { page } from "$app/stores";
   import { location } from "$src/lib/stores/location.store";
+  import { browser } from "$app/environment";
 
   $: bookingTime = $page.url.searchParams.get("bookingTime");
   $: workerFilterId = $page.url.searchParams.get("workerFilter");
@@ -18,7 +19,11 @@
   }));
 </script>
 
-<div class="flex h-full pb-16 md:pb-0 md:px-8 lg:px-12 xl:px-16 2xl:px-40">
+<div
+  class="flex h-full {browser && window.location.href.includes('schedule')
+    ? 'pb-0'
+    : 'pb-16'} md:pb-0 md:px-8 lg:px-12 xl:px-16 2xl:px-40"
+>
   <div class="flex flex-col md:flex-row items-center md:items-start w-full">
     <div class="w-full flex-[11] {$shopStore.selectedService ? 'md:pr-10' : ''}">
       <slot />
