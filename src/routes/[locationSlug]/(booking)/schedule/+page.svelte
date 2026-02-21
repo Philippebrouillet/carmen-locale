@@ -256,7 +256,7 @@
 </script>
 
 <div
-  class="w-full flex flex-col items-center md:items-start px-4 pb-20 overflow-x-scroll max-h-screen md:overflow-auto md:max-h-full"
+  class="w-full flex flex-col items-center md:items-start px-4 pb-20 overflow-x-scroll max-h-[100dvh] md:overflow-auto md:max-h-full"
 >
   <BookingHeader text={m.chooseArrivalTime()} />
 
