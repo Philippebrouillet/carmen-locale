@@ -41,6 +41,40 @@
   export let finalPriceToPay: number;
   export let isCreatingTicket: boolean = false;
 
+  let card: StripeCardElement;
+  let disableButton = true;
+  let isCardElementCompleted = false;
+  let checkoutPaymentMethod: PaymentMethod | undefined = undefined;
+  let stripe: Stripe | null = null;
+  let eventSource: EventSource | null = null;
+  let now = new Date($clock);
+  $: now = new Date($clock);
+  let workerId = $shopStore.selectedProfessional?.id;
+  let servicesId = $shopStore.selectedService?.id;
+  let rdv = $shopStore.bookingType == "appointment" ? true : false;
+  let delay = $shopStore.bookingDelay;
+  let checkoutPaymentAvailable = false;
+  let cardError = "";
+  let errorPaymentStatus: Exclude<PaymentIntentStatus, "succeeded"> | undefined;
+  let creationTicketError = "";
+  let worker = $location.workers.find((w) => w.id.toString() === workerId?.toString());
+  let workerTickets =
+    worker?.tickets?.filter((t) => t.doneTime == null && t.canceledTime == null) || [];
+  let formData: { name: string; phone: E164Number | null; email: string } = {
+    name: "",
+    phone: "",
+    email: "",
+  };
+  let phoneValid = true;
+  let selectedCountry: CountryCode = "FR";
+  let errorMessage = "";
+
+  // let services = $location.services.filter((s) => servicesId.includes(s.id.toString()));
+  // let firstStart = rdv != null ? new Date(+rdv) : new Date(now.getTime() + +(delay ?? "0") * 60000);
+  // keep this as first info and let a new one be computed after
+  // let firstInfo = nextAvailableTime(workerTickets, now, firstStart);
+  // let firstIsFree = firstInfo.isFirstSlot && !(rdv != null && firstInfo.createHole);
+
   const handlePaymentTextErrorByPaymentStatus = (
     status: Exclude<PaymentIntentStatus, "succeded">,
   ) => {
@@ -62,50 +96,10 @@
     }
   };
 
-  let card: StripeCardElement;
-  let disableButton = true;
-  let isCardElementCompleted = false;
-  let checkoutPaymentMethod: PaymentMethod | undefined = undefined;
-  let stripe: Stripe | null = null;
-  let now = new Date($clock);
-  let eventSource: EventSource | null = null;
-  $: now = new Date($clock);
-  let workerId = $shopStore.selectedProfessional?.id;
-  let servicesId = $shopStore.selectedService?.id;
-  let rdv = $shopStore.bookingType == "appointment" ? true : false;
-  let delay = $shopStore.bookingDelay;
-  let checkoutPaymentAvailable = false;
-  let cardError = "";
-  let errorPaymentStatus: Exclude<PaymentIntentStatus, "succeeded"> | undefined;
-
-  $: paymentErrorTexts = errorPaymentStatus
-    ? handlePaymentTextErrorByPaymentStatus(errorPaymentStatus)
-    : null;
-  // let services = $location.services.filter((s) => servicesId.includes(s.id.toString()));
-  let worker = $location.workers.find((w) => w.id.toString() === workerId?.toString());
-  let workerTickets =
-    worker?.tickets?.filter((t) => t.doneTime == null && t.canceledTime == null) || [];
-  // let firstStart = rdv != null ? new Date(+rdv) : new Date(now.getTime() + +(delay ?? "0") * 60000);
-  // keep this as first info and let a new one be computed after
-  // let firstInfo = nextAvailableTime(workerTickets, now, firstStart);
-  // let firstIsFree = firstInfo.isFirstSlot && !(rdv != null && firstInfo.createHole);
-  let userExist: boolean | null = null;
-
-  let formData: { name: string; phone: E164Number | null; email: string } = {
-    name: "",
-    phone: "",
-    email: "",
-  };
-  let phoneValid = true;
-  let selectedCountry: CountryCode = "FR";
-  let errorMessage = "";
-
   function isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   }
-
-  // let cardenFeeAccept = false;
 
   async function createPaymentIntent(ticketId: number) {
     const response = await fetch(`${PUBLIC_CARDEN_API}/api/v4/stripe/test/payment-intent`, {
@@ -137,14 +131,8 @@
         }
         default: {
           error = true;
-          isCreatingTicket = false;
           errorPaymentStatus = status;
-          const paymentform = document.getElementById("payment-form-container");
-          if (paymentform) {
-            setTimeout(() => {
-              paymentform.scrollTo({ top: 0 });
-            }, 50);
-          }
+          stopCreatingTicket();
           closeEventSource();
           break;
         }
@@ -174,13 +162,22 @@
 
     eventSource.onmessage = async (e) => {
       const parsedData = JSON.parse(e.data);
-      console.log("Received SSE message:", parsedData);
-      const error = handlePaymentStatus(parsedData?.status, successUrl);
-      if (error) return;
+      handlePaymentStatus(parsedData?.status, successUrl);
     };
+
     eventSource.onerror = (err) => {
       console.error(`[!] sse error ${err}`);
     };
+  };
+
+  const stopCreatingTicket = () => {
+    isCreatingTicket = false;
+    const paymentform = document.getElementById("payment-form-container");
+    if (paymentform) {
+      setTimeout(() => {
+        paymentform.scrollTo({ top: 0 });
+      }, 50);
+    }
   };
 
   async function pay(
@@ -218,7 +215,6 @@
             locationId: $location.location.id,
           }),
         });
-        console.log("response", response);
 
         return await response.json();
       } catch (err) {
@@ -261,7 +257,7 @@
     isCreatingTicket = true;
 
     try {
-      const resp = await fetch(`${PUBLIC_CARDEN_API}/api/v2/ticket`, {
+      const resp = await fetch(`${PUBLIC_CARDEN_API}/api/v2/stripe_ticket`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -281,12 +277,20 @@
       if (resp.ok) {
         const body = await resp.json();
 
+        const paymentform = document.getElementById("payment-form-container");
+
+        if (body.error) {
+          creationTicketError = m[body.error]?.();
+          stopCreatingTicket();
+          return;
+        }
+
         if (paymentMethod === "credit-card" && stripe) {
           const clientSecret = await createPaymentIntent(body.payload.id);
 
           if (clientSecret.error) {
             errorMessage = "Failed to create payment intent. " + clientSecret.error;
-            isCreatingTicket = false;
+            stopCreatingTicket();
             return;
           }
           connectEventSourceToPaymentIntent(clientSecret.id, body.payload.slug);
@@ -397,21 +401,6 @@
     }
   });
 
-  // $: carden = $page.url.searchParams.get("carden") == "true" ?? false;
-  // $: locationPayUrl = setParam($page.url, 'carden', false.toString());
-  // $: cardenPayUrl = setParam($page.url, 'carden', true.toString());
-  $: {
-    if (userExist == null && formData.phone != null && formData.phone.length == 10) {
-      // checkClient(phone).catch((err) => { console.error(err); userExist = false; });
-    }
-  }
-  $: start = rdv != null ? new Date(+rdv) : new Date(now.getTime() + +(delay ?? "0") * 60000);
-  $: info = nextAvailableTime(workerTickets, now, start);
-  // $: isFree = info.isFirstSlot && !(rdv != null && info.createHole);
-  // $: finalPrice = $shopStore.selectedService?.discountedPrice
-  //   ? $shopStore.selectedService.discountedPrice + ($shopStore.cardenFee || 0)
-  //   : ($shopStore.selectedService?.price || 0) + ($shopStore.cardenFee || 0);
-
   const setDisableButton = () => {
     if (paymentMethod === "credit-card") {
       disableButton = isCardElementCompleted && isValidForm ? false : true;
@@ -419,8 +408,6 @@
       disableButton = isValidForm ? false : true;
     }
   };
-  $: isValidForm = formData.name.trim() !== "" && phoneValid && isValidEmail(formData.email);
-  $: isCardElementCompleted, isValidForm, setDisableButton();
 
   onDestroy(() => {
     if (stripe && card) {
@@ -428,16 +415,39 @@
     }
     closeEventSource();
   });
+
+  $: paymentErrorTexts = errorPaymentStatus
+    ? handlePaymentTextErrorByPaymentStatus(errorPaymentStatus)
+    : null;
+  $: start = rdv != null ? new Date(+rdv) : new Date(now.getTime() + +(delay ?? "0") * 60000);
+  $: info = nextAvailableTime(workerTickets, now, start);
+  $: isValidForm = formData.name.trim() !== "" && phoneValid && isValidEmail(formData.email);
+  $: isCardElementCompleted, isValidForm, setDisableButton();
+
+  // $: carden = $page.url.searchParams.get("carden") == "true" ?? false;
+  // $: locationPayUrl = setParam($page.url, 'carden', false.toString());
+  // $: cardenPayUrl = setParam($page.url, 'carden', true.toString());
+
+  // $: isFree = info.isFirstSlot && !(rdv != null && info.createHole);
+  // $: finalPrice = $shopStore.selectedService?.discountedPrice
+  //   ? $shopStore.selectedService.discountedPrice + ($shopStore.cardenFee || 0)
+  //   : ($shopStore.selectedService?.price || 0) + ($shopStore.cardenFee || 0);
 </script>
 
 <div
   id="payment-form-container"
   class="flex flex-col p-4 pt-4 lg:p-8 gap-6 w-full overflow-y-scroll min-h-screen h-full md:h-[80vh] pb-[400px]"
 >
-  {#if paymentErrorTexts}
+  {#if paymentErrorTexts || creationTicketError}
     <div class="bg-[#DFE5E7] bg-opacity-30 rounded-xl text-[#A03203] p-4 w-full">
-      <h2 class="uppercase font-bold">{paymentErrorTexts?.title}.</h2>
-      <p>{paymentErrorTexts?.description}</p>
+      {#if paymentErrorTexts}
+        <h2 class="uppercase font-bold">{paymentErrorTexts?.title}.</h2>
+        <p>{paymentErrorTexts?.description}</p>
+      {/if}
+
+      {#if creationTicketError}
+        <h2 class="font-bold">{creationTicketError}</h2>
+      {/if}
     </div>
   {/if}
 

@@ -239,7 +239,7 @@
   "ticketScheduleAbsent": "No-show",
   "chooseYourLanguage": "Select language",
   "english": "English",
-   "french": "French",
+  "french": "French",
   "spanish": "Spanish",
   "italian": "Italian",
   "portuguese": "Portuguese",
@@ -263,5 +263,9 @@
   "workerNotAvailable": "{workerName} is no longer available for this slot.",
   "estimatedTimeOfPassage": "Est. arrival time",
   "morning": "Morning",
-  "afternoon": "Afternoon"
+  "afternoon": "Afternoon",
+  "TicketGuardOverlap": "This slot was just booked. Please select another time.",
+  "TicketGuardWorkerUnavailable": "The pro is no longer available. Please pick another time or pro.",
+  "TicketGuardTicketInPast": "The selected time has passed. Please choose an upcoming slot.",
+  "TicketGuardTicketOutsidePlanning": "This time is outside of hours. Please check the schedule."
 }

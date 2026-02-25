@@ -104,6 +104,43 @@
     popupTypeOpen = type;
   };
 
+  const calculateFinalPrice = () => {
+    if (isOnlinePayment) {
+      if (paymentMode === "ONLINE_UPFRONT_FEE") return feesWithAccompte;
+      else {
+        if (paymentMode === "ONLINE_FULL") return priceWithDiscountPrice + finalCardenFees;
+        else return priceWithDiscountPrice;
+      }
+    } else {
+      return priceWithDiscountPrice;
+    }
+  };
+
+  const setLottieLoader = () => {
+    if (browser) {
+      const container = document.getElementById("loader");
+      if (container) {
+        if (isCreatingTicket && !container.hasChildNodes()) {
+          setTimeout(() => {
+            const drawer = document.querySelector('[data-vaul-drawer-visible="true"]');
+            drawer?.classList.add("hidden");
+            lottie.loadAnimation({
+              container: container,
+              renderer: "svg",
+              loop: true,
+              autoplay: true,
+              path: "/loader.json",
+            });
+          });
+        } else if (!isCreatingTicket && container.hasChildNodes()) {
+          const drawer = document.querySelector('[data-vaul-drawer-visible="false"]');
+          drawer?.classList.remove("hidden");
+          lottie.destroy("loader");
+        }
+      }
+    }
+  };
+
   onMount(async () => {
     if (!$shopStore.bookingDate) {
       const url = buildUrl(String($location.location.id));
@@ -184,48 +221,11 @@
       : displayPriceInDollars(priceWithDiscountPrice),
   };
 
-  const calculateFinalPrice = () => {
-    if (isOnlinePayment) {
-      if (paymentMode === "ONLINE_UPFRONT_FEE") return feesWithAccompte;
-      else {
-        if (paymentMode === "ONLINE_FULL") return priceWithDiscountPrice + finalCardenFees;
-        else return priceWithDiscountPrice;
-      }
-    } else {
-      return priceWithDiscountPrice;
-    }
-  };
-
   let finalPriceToPay = 0;
   $: paymentMode,
     isOnlinePayment,
     priceWithDiscountPrice,
     (finalPriceToPay = calculateFinalPrice());
-
-  const setLottieLoader = () => {
-    if (browser) {
-      const container = document.getElementById("loader");
-      if (container) {
-        if (isCreatingTicket && !container.hasChildNodes()) {
-          setTimeout(() => {
-            const drawer = document.querySelector('[data-vaul-drawer-visible="true"]');
-            drawer?.classList.add("hidden");
-            lottie.loadAnimation({
-              container: container,
-              renderer: "svg",
-              loop: true,
-              autoplay: true,
-              path: "/loader.json",
-            });
-          });
-        } else if (!isCreatingTicket && container.hasChildNodes()) {
-          const drawer = document.querySelector('[data-vaul-drawer-visible="false"]');
-          drawer?.classList.remove("hidden");
-          lottie.destroy("loader");
-        }
-      }
-    }
-  };
 
   $: isCreatingTicket, setLottieLoader();
 </script>

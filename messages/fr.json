@@ -264,5 +264,9 @@
   "estimatedTimeOfPassage": "Heure de passage estimée",
   "morning": "Matin",
   "afternoon": "Après-midi",
-  "noMoreSlotsToday": "Aucun créneau disponible."
+  "noMoreSlotsToday": "Aucun créneau disponible.",
+  "TicketGuardOverlap": "Ce créneau vient d'être réservé. Merci de choisir un autre horaire.",
+  "TicketGuardWorkerUnavailable": "Le pro n'est plus disponible. Merci de choisir un autre créneau.",
+  "TicketGuardTicketInPast": "L'horaire sélectionné est passé. Merci de choisir un créneau à venir.",
+  "TicketGuardTicketOutsidePlanning": "L'horaire est hors disponibilité. Merci de vérifier les horaires."
 }

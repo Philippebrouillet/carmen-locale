@@ -122,7 +122,6 @@ export function nextAvailableTime(
   now: Date,
   start: Date,
   durationS = 15 * 60,
-  worker,
 ): {
   ticketBefore: number;
   next: Date;

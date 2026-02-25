@@ -392,15 +392,17 @@
           {#each selectedWorker as w, i}
             {#key selectedTime}
               {#key bookingDelay}
-                <Worker
-                  bind:selectedWorkerId
-                  bind:selectedSlotTime
-                  worker={w}
-                  showInfo={appointmentOptionSelected}
-                  isFree={w.nextAvailable?.isFirstSlot &&
-                    !(appointmentOptionSelected && w.nextAvailable?.createHole)}
-                  index={i}
-                />
+                {#key selectedWorkerId}
+                  <Worker
+                    bind:selectedWorkerId
+                    bind:selectedSlotTime
+                    worker={w}
+                    showInfo={appointmentOptionSelected}
+                    isFree={w.nextAvailable?.isFirstSlot &&
+                      !(appointmentOptionSelected && w.nextAvailable?.createHole)}
+                    index={i}
+                  />
+                {/key}
               {/key}
             {/key}
           {/each}
@@ -417,14 +419,16 @@
           {#each otherWorkers as w, i}
             {#key selectedTime}
               {#key bookingDelay}
-                <Worker
-                  bind:selectedWorkerId
-                  bind:selectedSlotTime
-                  worker={w}
-                  showInfo={appointmentOptionSelected}
-                  index={i}
-                  isFree={false}
-                />
+                {#key selectedWorkerId}
+                  <Worker
+                    bind:selectedWorkerId
+                    bind:selectedSlotTime
+                    worker={w}
+                    showInfo={appointmentOptionSelected}
+                    index={i}
+                    isFree={false}
+                  />
+                {/key}
               {/key}
             {/key}
           {/each}
