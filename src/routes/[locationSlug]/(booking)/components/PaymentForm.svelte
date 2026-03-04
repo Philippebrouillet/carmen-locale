@@ -274,33 +274,30 @@
         }),
       });
 
-      if (resp.ok) {
-        const body = await resp.json();
+      const body = await resp.json();
 
-        const paymentform = document.getElementById("payment-form-container");
+      if (body.error) {
+        creationTicketError = m[body.error]?.();
+        stopCreatingTicket();
+        return;
+      }
 
-        if (body.error) {
-          creationTicketError = m[body.error]?.();
+      if (paymentMethod === "credit-card" && stripe) {
+        const clientSecret = await createPaymentIntent(body.payload.id);
+
+        if (clientSecret.error) {
+          errorMessage = "Failed to create payment intent. " + clientSecret.error;
           stopCreatingTicket();
           return;
         }
-
-        if (paymentMethod === "credit-card" && stripe) {
-          const clientSecret = await createPaymentIntent(body.payload.id);
-
-          if (clientSecret.error) {
-            errorMessage = "Failed to create payment intent. " + clientSecret.error;
-            stopCreatingTicket();
-            return;
-          }
-          connectEventSourceToPaymentIntent(clientSecret.id, body.payload.slug);
-          return;
-        }
-
-        const slug = body.payload.slug;
-        const url = buildUrl(`ticket/${slug}`);
-        goto(url);
+        connectEventSourceToPaymentIntent(clientSecret.id, body.payload.slug);
+        return;
       }
+
+      const slug = body.payload.slug;
+      const url = buildUrl(`ticket/${slug}`);
+      goto(url);
+
       isCreatingTicket = false;
     } catch (err) {
       isCreatingTicket = false;
